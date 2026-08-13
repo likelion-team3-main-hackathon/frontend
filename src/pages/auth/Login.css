@@ -1,0 +1,62 @@
+.login-page {
+  display: flex;
+  min-height: calc(100dvh - 48px);
+  flex-direction: column;
+  padding: 120px 0 56px;
+}
+
+.login-logo-placeholder {
+  display: grid;
+  width: 100%;
+  min-height: 198px;
+  place-items: center;
+  border-radius: 18px;
+  background: #edf6e5;
+  color: #65a24b;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.login-copy { margin-top: 98px; }
+
+.login-copy h1 {
+  margin: 0;
+  color: #1f2818;
+  font-size: 27px;
+  font-weight: 800;
+  line-height: 1.55;
+  letter-spacing: -0.04em;
+}
+
+.login-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 54px;
+}
+
+.google-login-button {
+  display: flex;
+  width: 100%;
+  min-height: 55px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid #f0eee9;
+  border-radius: 14px;
+  background: #fff;
+  color: #293125;
+  font-size: 15px;
+  font-weight: 700;
+  box-shadow: 0 3px 12px rgba(48, 54, 43, 0.025);
+}
+
+.google-login-button:disabled { cursor: wait; opacity: 0.68; }
+.google-login-icon { width: 52px; height: auto; object-fit: contain; }
+.login-message { margin: 0; color: #bd4d43; font-size: 12px; text-align: center; }
+
+@media (max-height: 760px) {
+  .login-page { padding-top: 72px; }
+  .login-copy { margin-top: 64px; }
+  .login-actions { margin-top: 38px; }
+}

@@ -1,0 +1,28 @@
+.app-shell {
+  display: flex;
+  justify-content: center;
+  min-height: 100dvh;
+  background: #edf0f5;
+}
+
+.mobile-frame {
+  width: 100%;
+  max-width: 430px;
+  min-height: 100dvh;
+  padding: 24px 20px;
+  background: #faf8f2;
+}
+
+@media (min-width: 431px) {
+  .app-shell {
+    align-items: center;
+    padding: 24px;
+  }
+
+  .mobile-frame {
+    min-height: min(820px, calc(100dvh - 48px));
+    overflow: hidden;
+    border-radius: 24px;
+    box-shadow: 0 0 30px rgba(31, 42, 68, 0.12);
+  }
+}

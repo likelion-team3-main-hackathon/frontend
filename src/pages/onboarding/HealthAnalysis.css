@@ -1,0 +1,89 @@
+.health-analysis-page {
+  display: flex;
+  min-height: calc(100dvh - 48px);
+  flex-direction: column;
+  padding: 36px 4px 14px;
+  background: #faf8f2;
+}
+
+.analysis-mask {
+  display: grid;
+  min-height: 108px;
+  place-items: center;
+  border-radius: 14px;
+  background: #eef7e7;
+  color: #5b9b42;
+  font-size: 12px;
+}
+
+.health-analysis-page h1 {
+  margin: 16px 0 16px;
+  color: #1F2818;
+    font-family: Pretendard;
+    font-size: 24px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 36px; /* 150% */
+}
+
+.analysis-item-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.analysis-item-card {
+  min-height: 51px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.analysis-item-label {
+  display: block;
+font-family: Pretendard;
+font-size: 13px;
+font-style: normal;
+font-weight: 700;
+line-height: 19.5px; /* 150% */
+}
+
+.analysis-item-label.caution {
+  color: #E8963A;
+}
+
+.analysis-item-label.goal {
+  color: #4E9E36;
+}
+
+.analysis-item-label.life {
+  color: #5B6450;
+}
+
+.analysis-item-card p {
+  margin: 6px 0;
+  color: #242E1C;
+font-family: Pretendard;
+font-size: 15px;
+font-style: normal;
+font-weight: 400;
+line-height: 22.5px;
+}
+
+.analysis-create-button {
+  width: 100%;
+  min-height: 38px;
+  margin-top: auto;
+  border: 0;
+  border-radius: 9px;
+  background: #4e8b35;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.analysis-source-count {
+  margin: -8px 0 14px;
+  color: #8b9186;
+  font-size: 11px;
+}
