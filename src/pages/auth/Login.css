@@ -35,25 +35,22 @@
   margin-top: 54px;
 }
 
-.google-login-button {
+.google-login-container {
   display: flex;
   width: 100%;
   min-height: 55px;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  border: 1px solid #f0eee9;
-  border-radius: 14px;
-  background: #fff;
-  color: #293125;
-  font-size: 15px;
-  font-weight: 700;
-  box-shadow: 0 3px 12px rgba(48, 54, 43, 0.025);
 }
 
-.google-login-button:disabled { cursor: wait; opacity: 0.68; }
-.google-login-icon { width: 52px; height: auto; object-fit: contain; }
+.google-login-container.is-loading {
+  pointer-events: none;
+  opacity: 0.68;
+}
+
+.login-status,
 .login-message { margin: 0; color: #bd4d43; font-size: 12px; text-align: center; }
+.login-status { color: #65705e; }
 
 @media (max-height: 760px) {
   .login-page { padding-top: 72px; }
