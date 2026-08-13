@@ -19,3 +19,7 @@ export function getRoutine(routineId) {
 export function getTodayRoutine() {
   return apiRequest('/routines/today')
 }
+
+export function getRoutines(page = 0, size = 20) {
+  return apiRequest(`/routines?page=${page}&size=${size}`)
+}

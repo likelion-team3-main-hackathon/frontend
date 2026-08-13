@@ -1,9 +1,19 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import BottomNav from '../../components/layout/BottomNav'
+import { getHome, getLatestCoaching } from '../../api/home'
+import { getRoutineRecords, recordWater } from '../../api/record'
+import { getRoutine, getRoutines } from '../../api/routine'
 import { homeMockData } from '../../mocks/homeData'
 import './Home.css'
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
+
+function localDateKey(date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
 
 function getWeekDates() {
   const today = new Date()
@@ -11,97 +21,151 @@ function getWeekDates() {
   return Array.from({ length: 7 }, (_, index) => {
     const date = new Date(today)
     date.setDate(today.getDate() + mondayOffset + index)
-    return {
-      key: date.toISOString().slice(0, 10),
-      day: WEEKDAYS[date.getDay()],
-      date: date.getDate(),
-      isToday: date.toDateString() === today.toDateString(),
-    }
+    return { key: localDateKey(date), day: WEEKDAYS[date.getDay()], date: date.getDate(), isToday: localDateKey(date) === localDateKey(today) }
   })
 }
 
-export default function Home({ onOpenRoutine }) {
+function routineSummary(routine) {
+  const start = new Date(`${routine.startDate}T00:00:00`)
+  const end = new Date(`${routine.endDate}T00:00:00`)
+  const now = new Date()
+  const totalDays = Math.max(1, Math.round((end - start) / 86400000) + 1)
+  const elapsed = Math.max(0, Math.min(totalDays, Math.round((now - start) / 86400000) + 1))
+  const totalWeeks = Math.max(1, Math.ceil(totalDays / 7))
+  return { ...routine, badge: `${elapsed}일차`, progress: Math.round(elapsed / totalDays * 100), currentWeek: Math.max(1, Math.ceil(elapsed / 7)), totalWeeks }
+}
+
+function scheduledItems(routines, date) {
+  return routines.flatMap((routine) => routine.days || [])
+    .filter((day) => day.scheduledDate === date)
+    .flatMap((day) => day.sections.flatMap((section) => section.exercises.map((exercise) => ({
+      id: exercise.exerciseId,
+      routineItemId: exercise.exerciseId,
+      type: section.sectionType === 'COOL_DOWN' ? '마무리' : '운동',
+      time: `${day.estimatedMinutes || 0}분 예정`,
+      title: exercise.name,
+      detail: `${exercise.targetValue} ${exercise.targetUnit === 'SECONDS' ? '초' : '회'} · ${exercise.sets}세트`,
+    }))))
+}
+
+function parseDetails(record) {
+  const value = record.details || record.detailsJson
+  if (typeof value === 'object' && value) return value
+  try { return JSON.parse(value || '{}') } catch { return {} }
+}
+
+export default function Home({ onOpenRoutine, onNavigate, onStartRoutine, onPassRoutine, onOpenReport, routineStatuses = {} }) {
   const weekDates = useMemo(getWeekDates, [])
-  const [selectedDate, setSelectedDate] = useState(
-    weekDates.find((date) => date.isToday)?.key || weekDates[0].key,
-  )
+  const todayKey = weekDates.find((date) => date.isToday)?.key || weekDates[0].key
+  const [selectedDate, setSelectedDate] = useState(todayKey)
+  const [userName, setUserName] = useState(homeMockData.userName)
+  const [activeRoutines, setActiveRoutines] = useState(homeMockData.activeRoutines)
+  const [routineDetails, setRoutineDetails] = useState([])
+  const [records, setRecords] = useState([])
+  const [coaching, setCoaching] = useState(homeMockData.condition.coaching)
   const [water, setWater] = useState(homeMockData.condition.water.current)
+  const [isApiConnected, setIsApiConnected] = useState(false)
+  const [routineSlide, setRoutineSlide] = useState(0)
+
+  useEffect(() => {
+    let active = true
+    Promise.allSettled([getHome(), getRoutines(), getLatestCoaching()]).then(async ([home, routines, coachingResult]) => {
+      if (!active) return
+      if (home.status === 'fulfilled') setUserName(home.value?.data?.user?.name || homeMockData.userName)
+      if (coachingResult.status === 'fulfilled') setCoaching(coachingResult.value?.data?.message || homeMockData.condition.coaching)
+      if (routines.status !== 'fulfilled') return
+
+      const list = routines.value?.data?.content || []
+      if (list.length === 0) return
+      setIsApiConnected(true)
+      setActiveRoutines(list.map(routineSummary))
+      const details = await Promise.allSettled(list.map((routine) => getRoutine(routine.id)))
+      if (active) setRoutineDetails(details.filter((result) => result.status === 'fulfilled').map((result) => result.value.data))
+    })
+    return () => { active = false }
+  }, [])
+
+  useEffect(() => {
+    let active = true
+    getRoutineRecords(selectedDate).then((response) => {
+      if (!active) return
+      const nextRecords = response?.data || []
+      setRecords(nextRecords)
+      const latestWater = [...nextRecords].find((record) => parseDetails(record).category === 'WATER')
+      setWater(latestWater ? Number(parseDetails(latestWater).glasses) : 0)
+    }).catch(() => {
+      if (active) setRecords([])
+    })
+    return () => { active = false }
+  }, [selectedDate])
+
+  const apiScheduled = scheduledItems(routineDetails, selectedDate)
+  const displayedRoutines = isApiConnected
+    ? apiScheduled
+    : selectedDate === todayKey ? homeMockData.todayRoutines : []
+  const nextRoutineIndex = displayedRoutines.findIndex((item) => !routineStatuses[item.id])
+  const completedCount = displayedRoutines.filter((item) => routineStatuses[item.id] === 'completed').length
+  const allDecided = displayedRoutines.length > 0 && displayedRoutines.every((item) => routineStatuses[item.id])
+
+  async function changeWater(change) {
+    const next = Math.max(0, Math.min(8, water + change))
+    setWater(next)
+    if (selectedDate !== todayKey) return
+    try { await recordWater(next) } catch { /* 목업 토큰에서는 화면 상태만 유지 */ }
+  }
 
   return (
     <section className="home-page">
       <div className="home-scroll-content">
-        <header className="home-topbar">
-          <strong>리뉴</strong>
-          <button type="button" aria-label="알림">♧</button>
-        </header>
+        <header className="home-topbar"><strong>리뉴</strong><button type="button" aria-label="알림">♧</button></header>
+        <p className="home-user-greeting">{userName} 님, 오늘도 가볍게 시작해요</p>
 
         <div className="week-selector" aria-label="이번 주 날짜 선택">
-          {weekDates.map((item) => (
-            <button
-              type="button"
-              key={item.key}
-              className={selectedDate === item.key ? 'selected' : ''}
-              onClick={() => setSelectedDate(item.key)}
-            >
-              <small>{item.day}</small><span>{item.date}</span>
-            </button>
-          ))}
+          {weekDates.map((item) => <button type="button" key={item.key} className={selectedDate === item.key ? 'selected' : ''} onClick={() => setSelectedDate(item.key)}><small>{item.day}</small><span>{item.date}</span></button>)}
         </div>
 
         <section className="home-section active-routine-section">
-          <h2>진행 중인 루틴 <span>1 / {homeMockData.activeRoutines.length}</span></h2>
-          <div className="active-routine-slider">
-            {homeMockData.activeRoutines.map((routine) => (
-              <button type="button" className="active-routine-card" key={routine.id} onClick={() => onOpenRoutine?.(routine)}>
-                <div><strong>{routine.title}</strong><em>{routine.badge}</em><span>›</span></div>
-                <div className="routine-progress"><i style={{ width: `${routine.progress}%` }} /></div>
-                <div className="routine-weeks">
-                  {Array.from({ length: routine.totalWeeks }, (_, index) => <span className={index + 1 === routine.currentWeek ? 'current' : ''} key={index}>{index + 1}주</span>)}
-                </div>
-              </button>
-            ))}
+          <h2>진행 중인 루틴 <span>{activeRoutines.length ? routineSlide + 1 : 0} / {activeRoutines.length}</span></h2>
+          <div
+            className="active-routine-slider"
+            onScroll={(event) => {
+              const slider = event.currentTarget
+              const cardWidth = slider.firstElementChild?.getBoundingClientRect().width || slider.clientWidth
+              setRoutineSlide(Math.max(0, Math.min(activeRoutines.length - 1, Math.round(slider.scrollLeft / (cardWidth + 10)))))
+            }}
+          >
+            {activeRoutines.map((routine) => <button type="button" className="active-routine-card" key={routine.id} onClick={() => onOpenRoutine?.(routine)}><div><strong>{routine.title}</strong><em>{routine.badge}</em><span>›</span></div><div className="routine-progress"><i style={{ width: `${routine.progress}%` }} /></div><div className="routine-weeks">{Array.from({ length: routine.totalWeeks }, (_, index) => <span className={index + 1 === routine.currentWeek ? 'current' : ''} key={index}>{index + 1}주</span>)}</div></button>)}
           </div>
-          <div className="slider-dots"><i /><i /><i /></div>
+          <div className="slider-dots">
+            {activeRoutines.map((routine, index) => <i className={index === routineSlide ? 'active' : ''} key={routine.id} />)}
+          </div>
         </section>
 
         <section className="today-timeline">
-          {homeMockData.todayRoutines.map((item) => (
-            <article className={`today-card ${item.primary ? 'primary' : ''}`} key={item.id}>
-              <span className="timeline-dot" />
-              {item.primary ? (
-                <>
-                  <div className="today-meta"><em>● {item.type}</em><span>{item.time}</span><b>›</b></div>
-                  <h2>{item.title}</h2><p>{item.detail}</p>
-                  <button type="button" className="routine-start-button">시작하기</button>
-                  <button type="button" className="routine-pass-button">패스하기</button>
-                </>
-              ) : (
-                <div className="compact-routine"><span>⌁</span><div><strong>{item.type} · {item.title}</strong><small>{item.time} · {item.detail}</small></div></div>
-              )}
+          {allDecided && (
+            <article className="today-completion-card">
+              <h2>오늘 {completedCount} / {displayedRoutines.length} 완료</h2>
+              <p>오늘의 루틴 진행 결과를 확인해 보세요</p>
+              <button type="button" onClick={() => onOpenReport?.(displayedRoutines)}>오늘의 리포트</button>
             </article>
-          ))}
+          )}
+          {displayedRoutines.length === 0 && <div className="empty-day-card">이 날짜에 예정된 루틴이 없어요.</div>}
+          {displayedRoutines.map((item, index) => {
+            const status = routineStatuses[item.id]
+            const isPrimary = index === nextRoutineIndex
+            return <article className={`today-card ${isPrimary ? 'primary' : ''} ${status || ''}`} key={item.id}><span className="timeline-dot" />{isPrimary ? <><div className="today-meta"><em>● {item.type}</em><span>{item.time}</span><b>›</b></div><h2>{item.title}</h2><p>{item.detail}</p><button type="button" className="routine-start-button" onClick={() => onStartRoutine?.(item)}>시작하기</button><button type="button" className="routine-pass-button" onClick={() => onPassRoutine?.(item)}>패스하기</button></> : <button type="button" className="compact-routine" disabled={Boolean(status)} onClick={() => onStartRoutine?.(item)}><span>{status === 'completed' ? '✓' : status === 'cancelled' ? '×' : '⌁'}</span><div><strong>{item.type} · {item.title}</strong><small>{item.time} · {item.detail}</small></div></button>}</article>
+          })}
         </section>
 
         <section className="condition-section">
-          <h2>오늘의 컨디션 기록</h2>
-          <article className="condition-card water-card">
-            <div className="condition-title"><span>♢</span><strong>물</strong><small>{water}잔 / {homeMockData.condition.water.target}잔</small><button onClick={() => setWater(Math.max(0, water - 1))}>−</button><button onClick={() => setWater(Math.min(8, water + 1))}>+</button></div>
-            <div className="water-glasses">{Array.from({ length: 8 }, (_, index) => <i className={index < water ? 'filled' : ''} key={index} />)}</div>
-            <p>한 잔 250ml · 목표까지 {Math.max(0, 8 - water)}잔 남았어요</p>
-          </article>
-
-          <article className="condition-card sleep-card">
-            <div className="condition-title"><span>◔</span><strong>수면</strong><small>{homeMockData.condition.sleep.total}</small><em>건강 앱 연동</em></div>
-            <div className="sleep-track"><i /></div>
-            <div className="sleep-labels"><span>{homeMockData.condition.sleep.asleepAt} 취침</span><strong>깊은 잠 {homeMockData.condition.sleep.deepSleep}</strong><span>{homeMockData.condition.sleep.wakeAt} 기상</span></div>
-            <div className="sleep-times"><span>00:00</span><span>12:00</span></div>
-          </article>
-
-          <article className="coaching-card"><span>!</span><p>{homeMockData.condition.coaching}</p></article>
+          <h2>선택한 날짜의 컨디션 기록 <small>{records.length}건</small></h2>
+          <article className="condition-card water-card"><div className="condition-title"><span>♢</span><strong>물</strong><small>{water}잔 / 8잔</small><button type="button" disabled={selectedDate !== todayKey} onClick={() => changeWater(-1)}>−</button><button type="button" disabled={selectedDate !== todayKey} onClick={() => changeWater(1)}>+</button></div><div className="water-glasses">{Array.from({ length: 8 }, (_, index) => <i className={index < water ? 'filled' : ''} key={index} />)}</div><p>한 잔 250ml · 목표까지 {Math.max(0, 8 - water)}잔 남았어요</p></article>
+          <article className="condition-card sleep-card"><div className="condition-title"><span>◔</span><strong>수면</strong><small>{homeMockData.condition.sleep.total}</small><em>건강 앱 연동</em></div><div className="sleep-track"><i /></div><div className="sleep-labels"><span>{homeMockData.condition.sleep.asleepAt} 취침</span><strong>깊은 잠 {homeMockData.condition.sleep.deepSleep}</strong><span>{homeMockData.condition.sleep.wakeAt} 기상</span></div><div className="sleep-times"><span>00:00</span><span>12:00</span></div></article>
+          <article className="coaching-card"><span>!</span><p>{coaching}</p></article>
           <button type="button" className="research-note">{homeMockData.condition.recommendation}<span>›</span></button>
         </section>
       </div>
-      <BottomNav active="home" />
+      <BottomNav active="home" onNavigate={onNavigate} />
     </section>
   )
 }
