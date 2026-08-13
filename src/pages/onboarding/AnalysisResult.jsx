@@ -1,7 +1,14 @@
 import './AnalysisResult.css'
 import smile from "../../assets/icons/smile_big.png"
 
-export default function AnalysisResult({ onConfirm, onLater }) {
+export default function AnalysisResult({ analysis, onConfirm, onLater }) {
+  const goal = analysis?.goals?.[0]?.description || analysis?.summary
+  const precaution = analysis?.precautions?.[0]?.description
+  const constraints = [
+    ...(analysis?.exerciseConstraints || []),
+    ...(analysis?.nutritionConstraints || []),
+  ].join(' · ')
+
   return (
     <section className="analysis-result-page">
       <div className="routine-preparing-background">
@@ -35,17 +42,17 @@ export default function AnalysisResult({ onConfirm, onLater }) {
         <div className="recommendation-card">
           <div>
             <span>목표</span>
-            <strong>12주 · 6kg · 주 4회 운동</strong>
+            <strong>{goal || '건강한 생활 습관 형성'}</strong>
           </div>
 
           <div>
             <span>주의</span>
-            <strong>허리 부담 동작 제외 · 자극 제외</strong>
+            <strong>{precaution || '특별한 주의사항 없음'}</strong>
           </div>
 
           <div>
-            <span>생활</span>
-            <strong>점심 12:30 · 고정 · 아침 집중</strong>
+            <span>제약</span>
+            <strong>{constraints || '추가 제약 조건 없음'}</strong>
           </div>
         </div>
 

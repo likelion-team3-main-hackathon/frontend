@@ -161,6 +161,12 @@
   background: #bdcdb5;
 }
 
+.health-consent-error {
+  margin: 0 0 10px;
+  color: #bd4d43;
+  font-size: 12px;
+}
+
 .health-consent-cancel {
   display: block;
   margin: 12px auto 0;

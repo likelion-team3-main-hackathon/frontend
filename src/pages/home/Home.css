@@ -4,6 +4,8 @@
 .home-topbar { display: flex; align-items: center; justify-content: space-between; }
 .home-topbar strong { color: #51903b; font-size: 19px; font-weight: 800; }
 .home-topbar button { border: 0; background: transparent; color: #374033; font-size: 20px; }
+.home-topbar-actions { display: flex; align-items: center; gap: 6px; }
+.home-topbar-actions button:last-child { color: #858b80; font-size: 10px; }
 .home-user-greeting { margin: 6px 0 0; color: #8b9186; font-size: 10px; }
 .week-selector { display: grid; grid-template-columns: repeat(7, 1fr); margin: 19px 0 18px; }
 .week-selector button { display: flex; min-width: 0; flex-direction: column; align-items: center; gap: 8px; padding: 0; border: 0; background: transparent; color: #4d5549; }
@@ -82,4 +84,5 @@
 .bottom-nav button > img { width: 20px; height: 20px; object-fit: contain; }
 .bottom-nav small { font-size: 9px; }
 .bottom-nav button.active { color: #52903d; font-weight: 700; }
+.empty-routine-card { width: 100%; min-height: 76px; padding: 16px; border: 1px dashed #9eb593; border-radius: 13px; background: #f4f8f0; color: #4e8b35; font-size: 12px; font-weight: 700; }
 .routine-detail-page { min-height: calc(100dvh - 48px); padding: 10px 4px 24px; color: #293125; }.routine-detail-page header { display: flex; align-items: center; gap: 12px; }.routine-detail-page header button { border: 0; background: transparent; font-size: 30px; }.routine-detail-page header h1 { font-size: 18px; }.routine-detail-hero { margin-top: 20px; padding: 28px 20px; border-radius: 16px; background: #eaf3df; }.routine-detail-hero span { padding: 5px 8px; border-radius: 99px; background: #fff; color: #57913f; font-size: 9px; }.routine-detail-hero h2 { margin: 15px 0 8px; font-size: 22px; }.routine-detail-hero p, .routine-detail-page article p { color: #7f877a; font-size: 12px; }.routine-detail-page article { margin-top: 12px; padding: 18px; border-radius: 13px; background: #fff; }.routine-detail-page article b { float: right; color: #57913f; }.detail-start-button { width: 100%; min-height: 50px; margin-top: 20px; border: 0; border-radius: 11px; background: #4e8b35; color: #fff; font-weight: 700; }

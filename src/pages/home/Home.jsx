@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { logout } from '../../api/auth'
 import BottomNav from '../../components/layout/BottomNav'
 import { getHome, getLatestCoaching } from '../../api/home'
 import { getRoutineRecords, recordWater } from '../../api/record'
@@ -54,7 +55,16 @@ function parseDetails(record) {
   try { return JSON.parse(value || '{}') } catch { return {} }
 }
 
-export default function Home({ onOpenRoutine, onNavigate, onStartRoutine, onPassRoutine, onOpenReport, routineStatuses = {} }) {
+export default function Home({
+  onOpenRoutine,
+  onNavigate,
+  onStartRoutine,
+  onPassRoutine,
+  onOpenReport,
+  onCreateRoutine,
+  onLoggedOut,
+  routineStatuses = {},
+}) {
   const weekDates = useMemo(getWeekDates, [])
   const todayKey = weekDates.find((date) => date.isToday)?.key || weekDates[0].key
   const [selectedDate, setSelectedDate] = useState(todayKey)
@@ -76,9 +86,12 @@ export default function Home({ onOpenRoutine, onNavigate, onStartRoutine, onPass
       if (routines.status !== 'fulfilled') return
 
       const list = routines.value?.data?.content || []
-      if (list.length === 0) return
       setIsApiConnected(true)
       setActiveRoutines(list.map(routineSummary))
+      if (list.length === 0) {
+        setRoutineDetails([])
+        return
+      }
       const details = await Promise.allSettled(list.map((routine) => getRoutine(routine.id)))
       if (active) setRoutineDetails(details.filter((result) => result.status === 'fulfilled').map((result) => result.value.data))
     })
@@ -114,10 +127,21 @@ export default function Home({ onOpenRoutine, onNavigate, onStartRoutine, onPass
     try { await recordWater(next) } catch { /* 목업 토큰에서는 화면 상태만 유지 */ }
   }
 
+  async function handleLogout() {
+    await logout()
+    onLoggedOut?.()
+  }
+
   return (
     <section className="home-page">
       <div className="home-scroll-content">
-        <header className="home-topbar"><strong>리뉴</strong><button type="button" aria-label="알림">♧</button></header>
+        <header className="home-topbar">
+          <strong>리뉴</strong>
+          <div className="home-topbar-actions">
+            <button type="button" aria-label="알림">♧</button>
+            <button type="button" onClick={handleLogout}>로그아웃</button>
+          </div>
+        </header>
         <p className="home-user-greeting">{userName} 님, 오늘도 가볍게 시작해요</p>
 
         <div className="week-selector" aria-label="이번 주 날짜 선택">
@@ -126,6 +150,11 @@ export default function Home({ onOpenRoutine, onNavigate, onStartRoutine, onPass
 
         <section className="home-section active-routine-section">
           <h2>진행 중인 루틴 <span>{activeRoutines.length ? routineSlide + 1 : 0} / {activeRoutines.length}</span></h2>
+          {isApiConnected && activeRoutines.length === 0 && (
+            <button type="button" className="empty-routine-card" onClick={onCreateRoutine}>
+              아직 루틴이 없어요. 첫 맞춤 루틴 만들기 ›
+            </button>
+          )}
           <div
             className="active-routine-slider"
             onScroll={(event) => {

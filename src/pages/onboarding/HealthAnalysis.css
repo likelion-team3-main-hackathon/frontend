@@ -82,6 +82,30 @@ line-height: 22.5px;
   font-weight: 700;
 }
 
+.analysis-create-button:disabled {
+  background: #a9b8a2;
+  cursor: wait;
+}
+
+.analysis-error {
+  margin: 14px 0;
+  color: #bd4d43;
+  font-size: 12px;
+}
+
+.analysis-back-button {
+  min-height: 40px;
+  margin-top: auto;
+  border: 1px solid #92aa87;
+  border-radius: 9px;
+  background: #fff;
+  color: #4e8b35;
+}
+
+.analysis-back-button + .analysis-create-button {
+  margin-top: 8px;
+}
+
 .analysis-source-count {
   margin: -8px 0 14px;
   color: #8b9186;
