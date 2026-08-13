@@ -8,11 +8,14 @@ import RoutineStopped from './pages/onboarding/RoutineStopped'
 import HealthAnalysis from './pages/onboarding/HealthAnalysis'
 import RoutineSelection from './pages/onboarding/RoutineSelection'
 import RoutineComplete from './pages/onboarding/RoutineComplete'
+import Home from './pages/home/Home'
+import RoutineDetail from './pages/home/RoutineDetail'
 import './Router.css'
 
 export default function Router() {
   const [page, setPage] = useState('login')
   const [healthDocuments, setHealthDocuments] = useState({ documents: [], documentIds: [] })
+  const [selectedRoutine, setSelectedRoutine] = useState(null)
 
   return (
     <div className="app-shell">
@@ -53,7 +56,18 @@ export default function Router() {
         )}
 
         {page === 'routine-complete' && (
-          <RoutineComplete onStart={() => setPage('login')} />
+          <RoutineComplete onStart={() => setPage('home')} />
+        )}
+
+        {page === 'home' && (
+          <Home onOpenRoutine={(routine) => {
+            setSelectedRoutine(routine)
+            setPage('routine-detail')
+          }} />
+        )}
+
+        {page === 'routine-detail' && (
+          <RoutineDetail routine={selectedRoutine} onBack={() => setPage('home')} />
         )}
 
         {page === 'health-consent' && (
