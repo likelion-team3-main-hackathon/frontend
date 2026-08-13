@@ -3,6 +3,7 @@ const API_BASE_URL = (
 ).replace(/\/$/, '')
 
 let accessToken = sessionStorage.getItem('accessToken')
+let refreshPromise = null
 
 // 로그인 단계에서 받은 Access Token을 넣을 예정
 export function setAccessToken(token) {
@@ -15,8 +16,39 @@ export function setAccessToken(token) {
   }
 }
 
+export function hasAccessToken() {
+  return Boolean(accessToken)
+}
+
 export function getApiBaseUrl() {
   return API_BASE_URL
+}
+
+async function refreshSession() {
+  if (!refreshPromise) {
+    refreshPromise = fetch(`${API_BASE_URL}/auth/token/refresh`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+    })
+      .then(async (response) => {
+        if (!response.ok) throw new Error('로그인이 만료되었습니다.')
+        const payload = await response.json()
+        const token = payload?.data?.accessToken
+        if (!token) throw new Error('재발급 토큰을 받지 못했습니다.')
+        setAccessToken(token)
+        return token
+      })
+      .catch((error) => {
+        setAccessToken(null)
+        throw error
+      })
+      .finally(() => {
+        refreshPromise = null
+      })
+  }
+
+  return refreshPromise
 }
 
 export async function apiRequest(path, options = {}) {
@@ -28,27 +60,44 @@ export async function apiRequest(path, options = {}) {
   } = options
 
   const isFormData = body instanceof FormData
+  const usesAccessToken = path !== '/auth/oauth/google' && path !== '/auth/token/refresh'
+  const requestBody = body
+    ? isFormData
+      ? body
+      : JSON.stringify(body)
+    : undefined
+  const requestHeaders = {
+    Accept: 'application/json',
+    ...(body && !isFormData
+      ? { 'Content-Type': 'application/json' }
+      : {}),
+    ...(usesAccessToken && accessToken
+      ? { Authorization: `Bearer ${accessToken}` }
+      : {}),
+    ...headers,
+  }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  let response = await fetch(`${API_BASE_URL}${path}`, {
     method,
     credentials: 'include',
     signal,
-    headers: {
-      Accept: 'application/json',
-      ...(body && !isFormData
-        ? { 'Content-Type': 'application/json' }
-        : {}),
-      ...(accessToken
-        ? { Authorization: `Bearer ${accessToken}` }
-        : {}),
-      ...headers,
-    },
-    body: body
-      ? isFormData
-        ? body
-        : JSON.stringify(body)
-      : undefined,
+    headers: requestHeaders,
+    body: requestBody,
   })
+
+  if (response.status === 401 && usesAccessToken && path !== '/auth/logout') {
+    const nextToken = await refreshSession()
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      method,
+      credentials: 'include',
+      signal,
+      headers: {
+        ...requestHeaders,
+        Authorization: `Bearer ${nextToken}`,
+      },
+      body: requestBody,
+    })
+  }
 
   const contentType = response.headers.get('content-type') || ''
 

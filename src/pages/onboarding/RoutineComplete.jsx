@@ -10,7 +10,11 @@ const CONFETTI = [
   { left: '88%', delay: '1.05s', color: 'yellow', shape: 'diamond' },
 ]
 
-export default function RoutineComplete({ onStart }) {
+export default function RoutineComplete({ routine, profile, onStart }) {
+  const durationWeeks = routine?.startDate && routine?.endDate
+    ? Math.max(1, Math.round((new Date(routine.endDate) - new Date(routine.startDate)) / 604800000))
+    : 4
+
   return (
     <section className="routine-complete-page">
       <div className="routine-complete-card">
@@ -30,19 +34,19 @@ export default function RoutineComplete({ onStart }) {
           </div>
 
           <h1>루틴이 완성됐어요!</h1>
-          <p>지중해식 4주 + 심폐 집중 4주<br />오늘부터 함께 시작해요</p>
+          <p>{routine?.title || '맞춤 웰니스 루틴'}<br />오늘부터 함께 시작해요</p>
 
           <div className="routine-complete-stats">
-            <div><strong>4주</strong><span>기간</span></div>
-            <div><strong>주 4회</strong><span>주간</span></div>
-            <div><strong>−6kg</strong><span>목표</span></div>
+            <div><strong>{durationWeeks}주</strong><span>기간</span></div>
+            <div><strong>{routine?.days?.length || 1}일</strong><span>구성</span></div>
+            <div><strong>AI</strong><span>맞춤</span></div>
           </div>
         </div>
 
         <footer className="routine-complete-footer">
           <div>
             <span>오늘부터 1일째</span>
-            <strong>정우정 님의 루틴</strong>
+            <strong>{profile?.name || '사용자'} 님의 루틴</strong>
           </div>
           <button type="button" onClick={onStart}>시작하기 ›</button>
         </footer>

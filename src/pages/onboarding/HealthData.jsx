@@ -4,12 +4,12 @@ import './HealthData.css'
 
 const INITIAL_DOCUMENTS = [
   {
-    id: 'apple-health',
-    title: '애플 건강',
-    description: '걸음·체중·수면 연동',
-    action: '연동',
+    id: 'aac-result',
+    title: 'AAC 검사 결과',
+    description: '검사 결과 사진 또는 PDF',
+    action: '추가',
     documentType: 'AAC_RESULT',
-    accept: '.json,.xml,.csv,application/json,text/xml,text/csv',
+    accept: 'image/jpeg,image/png,.pdf,application/pdf',
   },
   {
     id: 'inbody',
@@ -17,7 +17,7 @@ const INITIAL_DOCUMENTS = [
     description: '사진 찍으면 AI가 읽음',
     action: '촬영',
     documentType: 'INBODY',
-    accept: 'image/*',
+    accept: 'image/jpeg,image/png,.pdf,application/pdf',
   },
   {
     id: 'medical-record',
@@ -25,7 +25,7 @@ const INITIAL_DOCUMENTS = [
     description: '사진 또는 PDF 추가',
     action: '추가',
     documentType: 'MEDICAL_RECORD',
-    accept: 'image/*,.pdf,application/pdf',
+    accept: 'image/jpeg,image/png,.pdf,application/pdf',
   },
 ]
 
@@ -59,7 +59,7 @@ export default function HealthData({ onNext, onBack }) {
     const selectedDocuments = documents.filter((document) => document.file)
 
     if (selectedDocuments.length === 0) {
-      onNext?.({ documents: [], documentIds: [] })
+      setError('분석에 사용할 건강 문서를 하나 이상 선택해 주세요.')
       return
     }
 
@@ -74,10 +74,17 @@ export default function HealthData({ onNext, onBack }) {
         .map((response) => response?.data?.documentId)
         .filter(Boolean)
 
-      onNext?.({ documents: selectedDocuments, documentIds })
-    } catch {
-      // 로그인/API 연결 전에도 선택한 자료로 목업 분석 흐름을 확인할 수 있습니다.
-      onNext?.({ documents: selectedDocuments, documentIds: [] })
+      onNext?.({
+        documents: selectedDocuments,
+        documentIds,
+        analysisRequestKey: crypto.randomUUID(),
+      })
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : '건강 문서를 업로드하지 못했습니다.',
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -120,7 +127,7 @@ export default function HealthData({ onNext, onBack }) {
         <button type="button" className="health-next-button" onClick={handleNext} disabled={isSubmitting}>
           {isSubmitting ? '불러오는 중…' : '다음'}
         </button>
-        <button type="button" className="health-later-button" onClick={() => onNext?.({ documents: [], documentIds: [] })}>
+        <button type="button" className="health-later-button" onClick={() => onNext?.(null)}>
           나중에
         </button>
       </footer>

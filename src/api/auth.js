@@ -14,3 +14,13 @@ export async function loginWithGoogle(idToken) {
 
   return response?.data
 }
+
+export async function logout() {
+  try {
+    await apiRequest('/auth/logout', { method: 'POST' })
+  } catch {
+    // 로컬 토큰은 서버 세션 정리 성공 여부와 관계없이 제거합니다.
+  } finally {
+    setAccessToken(null)
+  }
+}
