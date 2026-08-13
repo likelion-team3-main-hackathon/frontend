@@ -12,6 +12,9 @@ import HealthData from './pages/onboarding/HealthData'
 import RoutineComplete from './pages/onboarding/RoutineComplete'
 import RoutineSelection from './pages/onboarding/RoutineSelection'
 import RoutineStopped from './pages/onboarding/RoutineStopped'
+import PlaceholderPage from './pages/placeholder/PlaceholderPage'
+import RoutineSession from './pages/home/RoutineSession'
+import TodayReport from './pages/home/TodayReport'
 import './Router.css'
 
 function pageForProfile(profile) {
@@ -27,6 +30,9 @@ export default function Router() {
   const [analysis, setAnalysis] = useState(null)
   const [routine, setRoutine] = useState(null)
   const [selectedRoutine, setSelectedRoutine] = useState(null)
+  const [routineSession, setRoutineSession] = useState(null)
+  const [routineStatuses, setRoutineStatuses] = useState({})
+  const [todayReportItems, setTodayReportItems] = useState([])
 
   useEffect(() => {
     if (page !== 'loading') return
@@ -108,16 +114,50 @@ export default function Router() {
 
         {page === 'home' && (
           <Home
-            onOpenRoutine={(selected) => {
-              setSelectedRoutine(selected)
-              setPage('routine-detail')
-            }}
             onCreateRoutine={() => setPage('health-data')}
             onLoggedOut={() => {
               setProfile(null)
               setPage('login')
             }}
+            onNavigate={setPage}
+            routineStatuses={routineStatuses}
+            onPassRoutine={(item) => setRoutineStatuses((current) => ({
+              ...current,
+              [item.id]: 'cancelled',
+            }))}
+            onOpenReport={(items) => {
+              setTodayReportItems(items)
+              setPage('today-report')
+            }}
+            onStartRoutine={(item) => {
+              setRoutineSession(item)
+              setPage('routine-session')
+            }}
+            onOpenRoutine={(routine) => {
+              setSelectedRoutine(routine)
+              setPage('routine-detail')
+            }}
           />
+        )}
+
+        {page === 'today-report' && (
+          <TodayReport
+            items={todayReportItems}
+            statuses={routineStatuses}
+            onBack={() => setPage('home')}
+          />
+        )}
+
+        {page === 'routine-session' && (
+          <RoutineSession
+            item={routineSession}
+            onDecision={(id, status) => setRoutineStatuses((current) => ({ ...current, [id]: status }))}
+            onClose={() => setPage('home')}
+          />
+        )}
+
+        {['analysis', 'market', 'community', 'my'].includes(page) && (
+          <PlaceholderPage page={page} onNavigate={setPage} />
         )}
 
         {page === 'routine-detail' && (

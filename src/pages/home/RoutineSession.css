@@ -1,0 +1,15 @@
+.routine-session-page { display: flex; min-height: calc(100dvh - 48px); flex-direction: column; padding: 14px 4px 24px; color: #293125; }
+.routine-session-page header { display: flex; align-items: center; gap: 12px; }
+.routine-session-page header button { width: 24px; padding: 0; border: 0; background: transparent; color: #343b30; font-size: 25px; }
+.routine-session-page header div { height: 4px; flex: 1; overflow: hidden; border-radius: 99px; background: #e4e5df; }
+.routine-session-page header div span { display: block; height: 100%; border-radius: inherit; background: #579440; transition: width .25s ease; }
+.routine-session-page header small { color: #898f84; font-size: 11px; }
+.routine-session-page main { display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.session-type { padding: 7px 12px; border-radius: 99px; background: #eaf3df; color: #589240; font-size: 11px; font-weight: 700; }
+.routine-session-page main > p { margin: 13px 0 0; color: #969b92; font-size: 12px; }
+.routine-session-page h1 { margin: 18px 0 0; color: #273022; font-size: 27px; }
+.routine-session-page .session-detail { margin-top: 10px; color: #7e857a; font-size: 14px; }
+.routine-session-page footer { display: flex; flex-direction: column; gap: 10px; }
+.routine-session-page footer button { width: 100%; min-height: 51px; border-radius: 11px; font-size: 14px; font-weight: 700; }
+.session-confirm { border: 0; background: #4e8b35; color: #fff; }
+.session-cancel { border: 1px solid #dedfd9; background: #fff; color: #747b70; }

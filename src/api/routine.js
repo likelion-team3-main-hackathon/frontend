@@ -23,7 +23,6 @@ export function getTodayRoutine() {
 export function getRoutines(page = 0, size = 20) {
   return apiRequest(`/routines?page=${page}&size=${size}`)
 }
-
 function wait(delayMs, signal) {
   return new Promise((resolve, reject) => {
     const timeoutId = window.setTimeout(resolve, delayMs)
