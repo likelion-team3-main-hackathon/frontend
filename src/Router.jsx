@@ -121,7 +121,7 @@ export default function Router() {
 
         {page === 'routine-selection' && (
           <RoutineSelection
-            analysisId={analysis?.id}
+            analysis={analysis}
             onComplete={(result) => {
               setRoutine(result)
               setPage('routine-complete')

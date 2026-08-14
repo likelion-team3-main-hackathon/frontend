@@ -31,6 +31,8 @@ function routineDaysFromApi(detail, tab) {
               }
             : {
                 id: exercise.exerciseId,
+                sectionType: section.sectionType,
+                sectionTitle: section.title,
                 name: exercise.name,
                 sets: exercise.sets || 1,
                 meta: [
@@ -46,7 +48,10 @@ function routineDaysFromApi(detail, tab) {
       .map((section) => section.title)
       .filter(Boolean)
       .filter((title, titleIndex, titles) => titles.indexOf(title) === titleIndex)
-    const focus = sectionNames[0] || (tab === 'meal' ? '식단 루틴' : '운동 루틴')
+    const mainSection = sections.find((section) => section.sectionType === 'MAIN_EXERCISE')
+    const focus = tab === 'meal'
+      ? sectionNames.join(' · ') || '식단 루틴'
+      : mainSection?.title || sectionNames.find((title) => !/준비|워밍업|마무리/.test(title)) || '운동 루틴'
     const calories = items.reduce((sum, item) => sum + Number(String(item.meta).match(/[\d,]+(?= kcal)/)?.[0]?.replaceAll(',', '') || 0), 0)
     return {
       id: day.routineDayId,
@@ -139,7 +144,7 @@ export default function RoutineDetail({ routine, onBack, onOpenAi }) {
               {day.items.map((item) => (
                 <div key={item.id}>
                   <span className="schedule-icon"><img src={activeTab === 'meal' ? mealIcon : exerciseIcon} alt="" /></span>
-                  <p><strong>{item.mealType && <em className="meal-type-label">{item.mealType}</em>}{item.name}</strong><small>{item.meta}</small></p>
+                  <p><strong>{item.mealType && <em className="meal-type-label">{item.mealType}</em>}{item.sectionTitle && <em className="activity-section-label">{item.sectionTitle}</em>}{item.name}</strong><small>{item.meta}</small></p>
                 </div>
               ))}
             </div>}

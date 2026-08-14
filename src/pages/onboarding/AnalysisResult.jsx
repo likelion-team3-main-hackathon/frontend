@@ -3,11 +3,20 @@ import smile from "../../assets/icons/smile_big.png"
 
 export default function AnalysisResult({ analysis, onConfirm, onLater }) {
   const goal = analysis?.goals?.[0]?.description || analysis?.summary
-  const precaution = analysis?.precautions?.[0]?.description
+  const firstPrecaution = analysis?.precautions?.[0]
+  const precaution = typeof firstPrecaution === 'string' ? firstPrecaution : firstPrecaution?.description
   const constraints = [
     ...(analysis?.exerciseConstraints || []),
     ...(analysis?.nutritionConstraints || []),
   ].join(' · ')
+  const bodyComposition = (analysis?.bodyCompositionFindings || [])
+    .slice(0, 4)
+    .map((finding) => `${finding.label} ${finding.value}${finding.unit || ''}`)
+    .join(' · ')
+  const allergies = (analysis?.allergyFindings || [])
+    .map((finding) => `${finding.allergen} ${finding.result}`)
+    .join(' · ')
+  const analyzedDocuments = analysis?.documentFindings?.length || 0
 
   return (
     <section className="analysis-result-page">
@@ -35,7 +44,7 @@ export default function AnalysisResult({ analysis, onConfirm, onLater }) {
 
           <div>
             <h2>이 정보로 루틴을 구성할까요?</h2>
-            <p>진료·인바디·목표를 바탕으로 만들어요</p>
+            <p>{analyzedDocuments || '선택한'}개 문서와 온보딩 목표를 함께 반영했어요</p>
           </div>
         </div>
 
@@ -54,6 +63,20 @@ export default function AnalysisResult({ analysis, onConfirm, onLater }) {
             <span>제약</span>
             <strong>{constraints || '추가 제약 조건 없음'}</strong>
           </div>
+
+          {bodyComposition && (
+            <div>
+              <span>인바디</span>
+              <strong>{bodyComposition}</strong>
+            </div>
+          )}
+
+          {allergies && (
+            <div>
+              <span>알레르기</span>
+              <strong>{allergies}</strong>
+            </div>
+          )}
         </div>
 
         <button
@@ -61,7 +84,7 @@ export default function AnalysisResult({ analysis, onConfirm, onLater }) {
           className="recommendation-confirm-button"
           onClick={onConfirm}
         >
-          네, 구성할게요
+          추천 루틴 목록 보기
         </button>
 
         <button

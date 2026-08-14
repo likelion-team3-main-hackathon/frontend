@@ -65,7 +65,7 @@ line-height: normal;
   position: relative;
   width: 142px;
   min-width: 142px;
-  min-height: 157px;
+  min-height: 178px;
   overflow: hidden;
   padding: 8px;
   border: 1px solid transparent;
@@ -74,6 +74,18 @@ line-height: normal;
   color: #2c3329;
   text-align: left;
   scroll-snap-align: start;
+}
+
+.routine-card-type {
+  display: inline-flex;
+  min-height: 22px;
+  align-items: center;
+  padding: 0 8px;
+  border-radius: 99px;
+  background: #eef4e7;
+  color: #4e8b35;
+  font-size: 9px;
+  font-weight: 800;
 }
 
 .routine-option-card.selected {
@@ -118,8 +130,8 @@ line-height: normal;
 .routine-option-card p { display: block; }
 
 .routine-option-card strong {
-  margin-top: 7px;
-  font-size: 10px;
+  margin-top: 12px;
+  font-size: 12px;
   line-height: 1.2;
 }
 
@@ -147,11 +159,24 @@ line-height: normal;
   line-height: 1.3;
 }
 
+.routine-option-card .routine-rationale {
+  color: #74776d;
+  font-size: 7px;
+}
+
 .routine-selection-actions {
   position: sticky;
   bottom: 0;
   padding: 10px 14px 14px;
   background: linear-gradient(transparent, #faf8f2 25%);
+}
+
+.routine-selection-actions small {
+  display: block;
+  margin: 0 0 7px;
+  color: #74776d;
+  font-size: 10px;
+  text-align: center;
 }
 
 .routine-selection-actions button {

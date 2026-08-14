@@ -290,13 +290,19 @@
   border-bottom: 0;
 }
 
-.meal-type-label {
+.meal-type-label,
+.activity-section-label {
   margin-right: 7px;
   color: #8b8878;
   font-size: 11px;
   font-style: normal;
   font-weight: 900;
   line-height: 11px;
+}
+
+.activity-section-label {
+  display: block;
+  margin: 0 0 4px;
 }
 
 .schedule-icon {
