@@ -15,6 +15,8 @@ import RoutineStopped from './pages/onboarding/RoutineStopped'
 import PlaceholderPage from './pages/placeholder/PlaceholderPage'
 import RoutineSession from './pages/home/RoutineSession'
 import TodayReport from './pages/home/TodayReport'
+import AiRoutineChat from './pages/home/AiRoutineChat'
+import { recordMealRoutine, recordRoutineItem } from './api/record'
 import './Router.css'
 
 function pageForProfile(profile) {
@@ -32,7 +34,25 @@ export default function Router() {
   const [selectedRoutine, setSelectedRoutine] = useState(null)
   const [routineSession, setRoutineSession] = useState(null)
   const [routineStatuses, setRoutineStatuses] = useState({})
+  const [routineCalories, setRoutineCalories] = useState({})
+  const [exerciseResults, setExerciseResults] = useState({})
   const [todayReportItems, setTodayReportItems] = useState([])
+  const [reportDate, setReportDate] = useState(null)
+  const [aiChatBackPage, setAiChatBackPage] = useState('home')
+
+  async function saveRoutineStatus(item, status, mealData, exerciseData) {
+    if (mealData && status === 'completed') {
+      await recordMealRoutine(item, mealData.foods, mealData.mealType)
+      const calories = mealData.foods.reduce((total, food) => total + Number(food.calories || 0), 0)
+      setRoutineCalories((current) => ({ ...current, [item.id]: calories }))
+    } else if (item.routineItemId != null) {
+      await recordRoutineItem(item.routineItemId, status, item.activityType || 'EXERCISE', exerciseData || {})
+    }
+    if (exerciseData && status === 'completed') {
+      setExerciseResults((current) => ({ ...current, [item.id]: exerciseData }))
+    }
+    setRoutineStatuses((current) => ({ ...current, [item.id]: status }))
+  }
 
   useEffect(() => {
     if (page !== 'loading') return
@@ -121,12 +141,15 @@ export default function Router() {
             }}
             onNavigate={setPage}
             routineStatuses={routineStatuses}
-            onPassRoutine={(item) => setRoutineStatuses((current) => ({
-              ...current,
-              [item.id]: 'cancelled',
-            }))}
-            onOpenReport={(items) => {
+            routineCalories={routineCalories}
+            onStatusesLoaded={(statuses, calories) => {
+              setRoutineStatuses((current) => ({ ...current, ...statuses }))
+              setRoutineCalories((current) => ({ ...current, ...calories }))
+            }}
+            onPassRoutine={(item) => saveRoutineStatus(item, 'cancelled')}
+            onOpenReport={(items, selectedDate) => {
               setTodayReportItems(items)
+              setReportDate(selectedDate)
               setPage('today-report')
             }}
             onStartRoutine={(item) => {
@@ -144,14 +167,23 @@ export default function Router() {
           <TodayReport
             items={todayReportItems}
             statuses={routineStatuses}
+            calories={routineCalories}
+            exerciseResults={exerciseResults}
+            reportDate={reportDate}
             onBack={() => setPage('home')}
+            onNavigate={(nextPage) => {
+              if (nextPage === 'ai-chat') setAiChatBackPage('today-report')
+              setPage(nextPage)
+            }}
           />
         )}
+
+        {page === 'ai-chat' && <AiRoutineChat onBack={() => setPage(aiChatBackPage)} />}
 
         {page === 'routine-session' && (
           <RoutineSession
             item={routineSession}
-            onDecision={(id, status) => setRoutineStatuses((current) => ({ ...current, [id]: status }))}
+            onDecision={saveRoutineStatus}
             onClose={() => setPage('home')}
           />
         )}
@@ -164,6 +196,10 @@ export default function Router() {
           <RoutineDetail
             routine={selectedRoutine}
             onBack={() => setPage('home')}
+            onOpenAi={() => {
+              setAiChatBackPage('routine-detail')
+              setPage('ai-chat')
+            }}
           />
         )}
 

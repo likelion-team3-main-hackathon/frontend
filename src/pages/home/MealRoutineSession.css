@@ -1,0 +1,404 @@
+.meal-session-page {
+  display: flex;
+  min-height: calc(100dvh - 48px);
+  flex-direction: column;
+  padding: 0 0 4px;
+  color: #293125;
+}
+
+.meal-session-header {
+  display: flex;
+  min-height: 38px;
+  align-items: center;
+  gap: 8px;
+}
+
+.meal-session-header button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #293125;
+  font-size: 25px;
+}
+
+.meal-session-header h1 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.meal-photo-card {
+  display: flex;
+  min-height: 145px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+  border: 0;
+  border-radius: 15px;
+  background: #eaf3df center / cover no-repeat;
+  color: #5b9844;
+}
+
+.meal-photo-card > img { width: 22px; height: 22px; object-fit: contain; }
+.meal-photo-card small { font-size: 11px; }
+.meal-photo-input { display: none; }
+
+.meal-recognition-notice {
+  margin: 8px 2px 0;
+  color: #5b9844;
+  font-size: 9px;
+  text-align: center;
+}
+
+.meal-food-list {
+  display: flex;
+  margin-top: 11px;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.meal-food-card {
+  width: 100%;
+  padding: 14px 15px;
+  border: 1px solid #eeeae1;
+  border-radius: 13px;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+.meal-food-card > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.meal-food-card > div + div { margin-top: 9px; }
+.meal-food-card strong { font-size: 12px; }
+.meal-food-card span { color: #a7aa9f; }
+.meal-food-card b { font-size: 11px; }
+.meal-food-card small { color: #858b80; font-size: 9px; }
+
+.meal-total-card {
+  display: flex;
+  margin-top: 9px;
+  padding: 13px 15px;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 11px;
+  background: #f2f0e8;
+}
+
+.meal-total-card strong { font-size: 11px; }
+.meal-total-card small { color: #858b80; font-size: 9px; }
+
+.meal-add-button {
+  width: 34px;
+  height: 34px;
+  margin: 24px 3px 10px auto;
+  border: 1px solid #dedfd9;
+  border-radius: 50%;
+  background: #fff;
+  color: #4d5549;
+  font-size: 20px;
+}
+
+.meal-add-form {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid #e5e1d7;
+  border-radius: 13px;
+  background: #fff;
+}
+
+.meal-add-form input {
+  width: 100%;
+  min-width: 0;
+  padding: 9px;
+  border: 1px solid #e5e1d7;
+  border-radius: 8px;
+  font: inherit;
+}
+
+.meal-add-form > div {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+  margin-top: 7px;
+}
+
+.meal-add-form footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 7px;
+  margin-top: 8px;
+}
+
+.meal-add-form footer button {
+  padding: 7px 12px;
+  border: 0;
+  border-radius: 7px;
+  background: #edf5e7;
+  color: #4a7c36;
+}
+
+.meal-session-error {
+  margin: auto 0 8px;
+  color: #c15a4a;
+  font-size: 10px;
+  text-align: center;
+}
+
+.meal-confirm-button {
+  width: 100%;
+  min-height: 47px;
+  margin-top: auto;
+  border: 0;
+  border-radius: 8px;
+  background: #4e8b35;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.meal-confirm-button:disabled { opacity: .55; }
+
+/* 음식 개별 상세 */
+.meal-food-detail-page {
+  display: flex;
+  min-height: calc(100dvh - 48px);
+  flex-direction: column;
+  color: #293125;
+}
+
+.meal-subpage-header {
+  display: flex;
+  min-height: 38px;
+  align-items: center;
+  gap: 8px;
+}
+
+.meal-subpage-header button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: 25px;
+}
+
+.meal-subpage-header h1 { margin: 0; font-size: 13px; }
+
+.food-detail-summary {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 12px;
+  padding: 11px;
+  border-radius: 13px;
+  background: #fff;
+}
+
+.food-detail-photo {
+  display: grid;
+  min-height: 92px;
+  place-items: center;
+  border-radius: 10px;
+  background: #eaf3df center / cover no-repeat;
+  font-size: 38px;
+}
+
+.food-detail-summary > div:last-child {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.food-detail-summary strong { font-size: 14px; }
+.food-detail-summary b { font-size: 12px; }
+.food-detail-summary em { padding: 4px 8px; border-radius: 99px; background: #edf5e7; color: #5b9844; font-size: 9px; font-style: normal; }
+.food-recognition-line { display: flex; align-items: center; gap: 7px; }
+
+.food-nutrition-card {
+  margin-top: 10px;
+  padding: 13px;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.food-detail-time,
+.food-unit-selector,
+.food-amount-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.food-detail-time {
+  min-height: 68px;
+  margin-top: 10px;
+  padding: 0 18px;
+  border: 1px solid #eeeae1;
+  border-radius: 16px;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+.food-detail-time small { color: #a2a69d; font-size: 10px; font-weight: 400; }
+.food-detail-time > span { display: flex; align-items: center; gap: 10px; }
+.food-detail-time img { width: 17px; height: 17px; object-fit: contain; }
+.food-unit-selector {
+  min-height: 43px;
+  margin-top: 12px;
+  overflow: hidden;
+  padding: 3px;
+  border-radius: 11px;
+  background: #ece9de;
+}
+.food-unit-selector button {
+  width: 50%;
+  align-self: stretch;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #96978f;
+  font-size: 11px;
+  font-weight: 600;
+}
+.food-unit-selector button.active {
+  border: 1px solid #e6e2d8;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(48, 53, 44, .08);
+  color: #293125;
+  font-weight: 800;
+}
+.food-amount-stepper {
+  min-height: 72px;
+  margin-top: 8px;
+  padding: 0 18px;
+  border: 1px solid #eeeae1;
+  border-radius: 16px;
+  background: #fff;
+}
+.food-amount-stepper button { width: 38px; height: 38px; border: 0; border-radius: 50%; background: #efede4; color: #4d5549; font-size: 19px; }
+.food-amount-stepper button:last-child { background: #4e8b35; color: #fff; }
+.food-amount-stepper strong { font-size: 14px; }
+
+.food-detail-row {
+  display: flex;
+  width: 100%;
+  margin-top: 10px;
+  padding: 14px;
+  align-items: center;
+  justify-content: space-between;
+  border: 0;
+  border-radius: 11px;
+  background: #fff;
+  color: #293125;
+  font-size: 11px;
+  text-align: left;
+}
+
+.food-detail-row span { display: flex; flex-direction: column; gap: 5px; font-weight: 700; }
+.food-detail-row small { color: #9a9f96; font-size: 8px; font-weight: 400; }
+.food-detail-row b { color: #777e72; font-size: 10px; }
+.ingredient-row > button {
+  flex: 0 0 auto;
+  min-width: 54px;
+  padding: 9px 13px;
+  border: 1px solid #e7e2d8;
+  border-radius: 99px;
+  background: #fff;
+  color: #4d5549;
+  font-size: 10px;
+  font-weight: 700;
+}
+.ingredient-row > button:disabled { opacity: .55; }
+.food-cart-status { margin: 6px 3px 0; color: #5b9844; font-size: 9px; text-align: right; }
+.food-nutrition-card strong { font-size: 18px; }
+.food-nutrition-card strong small { font-size: 9px; }
+.food-nutrition-card > div { display: flex; height: 4px; gap: 4px; margin: 11px 0 7px; }
+.food-nutrition-card i { display: block; max-width: 33%; flex: 1; background: #d7a348; }
+.food-nutrition-card i:nth-child(2) { background: #83aa65; }
+.food-nutrition-card i:nth-child(3) { background: #d6763d; }
+.food-nutrition-card > small { color: #8d9389; font-size: 9px; }
+.meal-food-detail-page > .meal-confirm-button { margin-top: auto; }
+.food-delete-button {
+  margin: 7px auto 0;
+  padding: 8px 12px;
+  border: 0;
+  background: transparent;
+  color: #c16859;
+  font-size: 10px;
+  text-decoration: underline;
+}
+
+/* 음식 촬영 */
+.meal-camera-page {
+  position: absolute;
+  z-index: 20;
+  inset: 0;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  flex-direction: column;
+  margin: 0;
+  overflow: hidden;
+  background: #192617;
+  color: #fff;
+}
+
+.meal-camera-page > header {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 12px;
+}
+
+.meal-camera-page > header small { margin-right: auto; color: #cbd3c7; font-size: 9px; }
+.meal-camera-page > header button { border: 0; background: transparent; color: #fff; font-size: 19px; }
+.camera-viewport {
+  position: relative;
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  background: #111a10;
+}
+.camera-viewport video,
+.camera-viewport > img { width: 100%; height: 100%; object-fit: cover; }
+
+.camera-guide {
+  position: absolute;
+  inset: 13% 10%;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, .35);
+  border-radius: 15px;
+}
+
+.camera-guide > small { color: rgba(255, 255, 255, .72); font-size: 10px; line-height: 1.6; text-align: center; }
+.camera-guide > i { position: absolute; width: 18px; height: 18px; border-color: #fff; }
+.camera-guide > i:nth-child(1) { top: -6px; left: -6px; border-top: 2px solid; border-left: 2px solid; }
+.camera-guide > i:nth-child(2) { top: -6px; right: -6px; border-top: 2px solid; border-right: 2px solid; }
+.camera-guide > i:nth-child(3) { bottom: -6px; left: -6px; border-bottom: 2px solid; border-left: 2px solid; }
+.camera-guide > i:nth-child(4) { right: -6px; bottom: -6px; border-right: 2px solid; border-bottom: 2px solid; }
+.meal-camera-page > p { margin: 0; padding: 7px; background: #fff7e8; color: #956d2f; font-size: 9px; text-align: center; }
+
+.meal-camera-page > footer {
+  display: grid;
+  min-height: 122px;
+  grid-template-columns: 1fr 1.5fr 1fr;
+  align-items: center;
+  place-items: center;
+  background: #fff;
+}
+
+.meal-camera-page > footer button { border: 0; background: transparent; color: #31382e; }
+.camera-gallery { display: flex; flex-direction: column; gap: 5px; align-items: center; }
+.camera-gallery small { font-size: 8px; }
+.camera-shutter { width: 58px; height: 58px; border: 2px solid #202820 !important; border-radius: 50%; box-shadow: inset 0 0 0 5px #fff; }
+.camera-close { width: 32px; height: 32px; border-radius: 7px !important; background: #f5f5f1 !important; font-size: 17px; }
+.camera-use { padding: 11px 15px !important; border-radius: 99px !important; background: #4e8b35 !important; color: #fff !important; font-weight: 700; }

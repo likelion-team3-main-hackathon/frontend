@@ -23,6 +23,13 @@ export function getTodayRoutine() {
 export function getRoutines(page = 0, size = 20) {
   return apiRequest(`/routines?page=${page}&size=${size}`)
 }
+
+export function updateRoutineExercise(routineId, exerciseId, exercise) {
+  return apiRequest(`/routines/${routineId}/exercises/${exerciseId}`, {
+    method: 'PATCH',
+    body: exercise,
+  })
+}
 function wait(delayMs, signal) {
   return new Promise((resolve, reject) => {
     const timeoutId = window.setTimeout(resolve, delayMs)

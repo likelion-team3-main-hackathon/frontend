@@ -1,0 +1,357 @@
+/* 페이지 및 상단 헤더 */
+.my-routine-page {
+  min-height: calc(100dvh - 48px);
+  padding: 12px 0 28px;
+  color: #263021;
+}
+
+.my-routine-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.my-routine-header button {
+  width: 20px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #3f4437;
+  font-size: 17px;
+}
+
+.my-routine-header h1 {
+  margin: 0;
+  color: #1f241c;
+  font-size: 18px;
+}
+
+/* 루틴 요약 카드 */
+.my-routine-summary {
+  margin-top: 19px;
+  padding: 16px 20px 24px;
+  border: 1px solid #eae5d5;
+  border-radius: 18px;
+  background: #fff;
+}
+
+.my-routine-summary > div:first-child {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.my-routine-summary strong {
+  font-size: 15px;
+}
+
+.my-routine-summary em {
+  padding: 3px 7px;
+  border-radius: 99px;
+  background: #f1f6ea;
+  color: #4a7c36;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 900;
+  line-height: 11px;
+}
+
+.my-routine-summary > div:first-child > span {
+  margin-left: auto;
+  color: #8f958a;
+}
+
+/* AI 요약 */
+.routine-ai-summary {
+  display: flex;
+  width: 100%;
+  min-height: 52px;
+  align-items: center;
+  justify-content: space-between;
+  align-self: stretch;
+  margin-top: 14px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 14px;
+  background: #e8f2dd;
+  color: #4e9e36;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.routine-ai-summary img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+/* 식사/운동 탭 */
+.routine-type-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin-top: 13px;
+  padding: 3px;
+  border-radius: 12px;
+  background: #ebe7da;
+}
+
+.routine-type-tabs button {
+  min-height: 32px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #8b8878;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 500;
+}
+
+.routine-type-tabs button.active {
+  background: #fff;
+  color: #1f241c;
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(50, 50, 35, 0.14);
+}
+
+/* 주차 및 일차 목록 */
+.routine-week-heading {
+  margin: 18px 0 10px;
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 900;
+  line-height: 13px;
+}
+
+.routine-day-list {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+.routine-day-schedule {
+  overflow: hidden;
+  padding: 15px 16px 16px 16px;
+  border: 1px solid #eae5d5;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.routine-day-schedule.collapsed {
+  padding: 13px 16px;
+  border-color: #eae5d5;
+}
+
+.routine-day-header {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 12px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* 일차 숫자 배지 */
+.routine-day-number {
+  display: flex;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border-radius: 13px;
+  background: #f1f6ea;
+  color: #4a7c36;
+}
+
+.routine-day-number strong {
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 16px;
+}
+
+.routine-day-number small {
+  color: #8cab7d;
+  font-size: 8px;
+  line-height: 8px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.routine-day-schedule.collapsed .routine-day-number {
+  background: #f1f6ea;
+  color: #4a7c36;
+}
+
+.routine-day-schedule.collapsed .routine-day-number small {
+  color: #8cab7d;
+}
+
+.routine-day-schedule.today {
+  border-color: #65a34d;
+}
+
+.routine-day-schedule.today .routine-day-number {
+  background: #35802b;
+  color: #fff;
+}
+
+.routine-day-schedule.today .routine-day-number small {
+  color: #bfe0ad;
+}
+
+.routine-day-schedule.collapsed .routine-day-header {
+  align-items: center;
+}
+
+.routine-day-schedule.collapsed .routine-day-copy {
+  justify-content: center;
+}
+
+.routine-day-schedule.collapsed .routine-day-chevron {
+  margin-top: 0;
+  align-self: center;
+}
+
+.routine-day-copy {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+}
+
+.routine-day-copy > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.routine-day-copy strong {
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 900;
+  color: #1F241C;
+  line-height: 16px;
+}
+
+.routine-day-copy em {
+  padding: 3px 8px;
+  border-radius: 99px;
+  background: #F1F6EA;
+  color: #4A7C36;
+  font-size: 10px;
+  font-weight: 900;
+  font-style: normal;
+  line-height: 10px;
+}
+
+.routine-day-copy > small {
+  overflow: hidden;
+  max-width: 100%;
+  color: #B3AE9E;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.routine-day-chevron {
+  margin: 0 0 0 auto;
+  align-self: center;
+  color: #9DA38F;
+  font-size: 12px;
+  line-height: 1;
+}
+
+/* 일차별 활동 목록 */
+.routine-schedule-items {
+  margin-top: 10px;
+}
+
+.routine-schedule-items > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  align-self: stretch;
+  border-bottom: 0.5px solid #eeeae1;
+}
+
+.routine-schedule-items > div:last-child {
+  border-bottom: 0;
+}
+
+.meal-type-label {
+  margin-right: 7px;
+  color: #8b8878;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 900;
+  line-height: 11px;
+}
+
+.schedule-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  place-items: center;
+  border-radius: 10px;
+  background: #eaf3df;
+}
+
+.schedule-icon img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.routine-schedule-items p {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 0;
+}
+
+.routine-schedule-items p strong {
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.routine-schedule-items p small {
+  color: #8B8878;
+    font-family: "Noto Sans KR";
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 12px; /* 100% */
+}
+
+/* 일차 상세 버튼 */
+.routine-day-detail {
+  width: 100%;
+  min-height: 42px;
+  margin-top: 10px;
+  gap: 6.01px;
+  border: 0;
+  border-radius: 12px;
+  background: #F7F3EA;
+  color: #5B6450;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: Pretendard;
+}
+
+.routine-day-detail span {
+  margin-left: 3px;
+}

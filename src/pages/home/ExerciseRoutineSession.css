@@ -1,0 +1,128 @@
+.exercise-session-page,
+.exercise-detail-page { display: flex; min-height: calc(100dvh - 48px); flex-direction: column; color: #293125; }
+.exercise-session-page header,
+.exercise-detail-page header { display: flex; min-height: 40px; align-items: center; gap: 8px; }
+.exercise-session-page header button,
+.exercise-detail-page header button { padding: 0; border: 0; background: transparent; font-size: 25px; }
+.exercise-session-page header h1,
+.exercise-detail-page header h1 { margin: 0; font-size: 13px; }
+.exercise-session-page header small,
+.exercise-detail-page header small { margin-left: auto; color: #5b9844; font-size: 9px; }
+.exercise-session-summary { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 8px; padding: 14px; border-radius: 13px; background: #fff; }
+.exercise-session-summary span { display: flex; align-items: center; flex-direction: column; gap: 5px; border-right: 1px solid #eeeae1; }
+.exercise-session-summary span:last-child { border-right: 0; }
+.exercise-session-summary strong { font-size: 15px; }
+.exercise-session-summary small { color: #9a9f96; font-size: 8px; }
+.exercise-session-list { position: relative; display: flex; margin: 12px 0; padding-left: 17px; flex-direction: column; gap: 9px; }
+.exercise-session-list::before { position: absolute; top: 18px; bottom: 18px; left: 5px; width: 1px; background: #dedbd1; content: ''; }
+.exercise-session-list > button { position: relative; display: flex; min-height: 58px; align-items: center; gap: 10px; padding: 9px; border: 1px solid #eeeae1; border-radius: 12px; background: #fff; color: inherit; text-align: left; }
+.exercise-session-list > button > i { position: absolute; left: -17px; width: 8px; height: 8px; border: 2px solid #dedbd1; border-radius: 50%; background: #fff; }
+.exercise-session-list > button > i.current { width: 12px; height: 12px; left: -19px; border: 2px solid #f1c48a; background: #e49a3e; }
+.exercise-session-list > button > span { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 9px; background: #eaf3df; }
+.exercise-session-list img { width: 20px; height: 20px; object-fit: contain; }
+.exercise-session-list div { display: flex; flex-direction: column; gap: 6px; }
+.exercise-session-list strong { font-size: 11px; }
+.exercise-session-list small { color: #8d9389; font-size: 8px; }
+.exercise-session-list b { margin-left: auto; color: #a4a89f; }
+.exercise-start-button,
+.exercise-save-button { width: 100%; min-height: 47px; margin-top: auto; border: 0; border-radius: 8px; background: #4e8b35; color: #fff; font-size: 11px; font-weight: 700; }
+.exercise-video-placeholder { display: grid; min-height: 190px; margin-top: 8px; place-items: center; border-radius: 14px; background: #eaf3df; color: #769966; font-size: 11px; text-align: center; }
+.exercise-video-placeholder small { font-size: 8px; }
+.exercise-setting-card { margin-top: 12px; overflow: hidden; padding: 0 13px; border-radius: 13px; background: #fff; }
+.exercise-setting-row { display: flex; min-height: 54px; align-items: center; justify-content: space-between; border-bottom: 1px solid #eeeae1; }
+.exercise-setting-row:last-child { border-bottom: 0; }
+.exercise-setting-row > span { font-size: 10px; font-weight: 700; }
+.exercise-setting-row > div { display: flex; align-items: center; gap: 10px; }
+.exercise-setting-row button { width: 27px; height: 27px; border: 0; border-radius: 50%; background: #efede4; color: #687062; }
+.exercise-setting-row button:last-child { background: #4e8b35; color: #fff; }
+.exercise-setting-row strong { min-width: 55px; font-size: 10px; text-align: center; }
+.exercise-tip { margin: 12px 0; padding: 13px; border-radius: 11px; background: #eaf3df; color: #6d7d66; font-size: 9px; line-height: 1.6; }
+.exercise-tip strong { color: #4e8b35; }
+.exercise-save-error { color: #c15a4a; font-size: 9px; text-align: center; }
+.exercise-save-button:disabled,
+.exercise-start-button:disabled { opacity: .55; }
+
+/* 운동 수행 */
+.exercise-workout-page,
+.exercise-rest-page,
+.exercise-complete-page { position: relative; display: flex; min-height: calc(100dvh - 48px); flex-direction: column; color: #293125; text-align: center; }
+.workout-exit { position: absolute; z-index: 2; top: 7px; right: 4px; width: 30px; height: 30px; border: 0; border-radius: 50%; background: rgba(31, 40, 30, .75); color: #fff; }
+.workout-video { display: grid; min-height: 280px; margin-top: 28px; place-items: center; border-radius: 15px; background: #fff; color: #a0a59c; font-size: 10px; }
+.workout-video small { font-size: 8px; }
+.workout-progress { display: flex; gap: 4px; margin: auto 12px 11px; }
+.workout-progress i { height: 4px; flex: 1; border-radius: 99px; background: #d7d5ce; }
+.workout-progress i.active { background: #75b45c; }
+.exercise-workout-page > small { color: #5f675b; font-size: 10px; }
+.exercise-workout-page > h1 { margin: 9px 0 5px; font-size: 17px; }
+.exercise-workout-page > p { margin: 0; color: #9ca097; font-size: 11px; }
+.workout-timer { margin-top: 4px; color: #8d9389; font-size: 17px; }
+.exercise-workout-page nav { display: flex; align-items: center; justify-content: space-between; margin: 23px 5px 18px; }
+.exercise-workout-page nav button { display: grid; width: 44px; height: 44px; padding: 0; place-items: center; border: 0; border-radius: 50%; background: #383c37; box-shadow: 0 2px 5px rgba(34, 39, 33, .12); }
+.exercise-workout-page nav img { width: 17px; height: 17px; object-fit: contain; }
+.exercise-workout-page nav button:nth-child(2) { width: 54px; height: 54px; background: #fff; }
+.exercise-workout-page nav button:nth-child(2) img { width: 18px; height: 18px; }
+.exercise-workout-page nav button:disabled { opacity: .3; }
+.learn-posture-button { display: flex; width: 100%; min-height: 45px; align-items: center; justify-content: center; gap: 7px; border: 0; border-radius: 8px; background: #4e8b35; color: #fff; font-size: 11px; font-weight: 700; }
+.learn-posture-button img { width: 16px; height: 16px; object-fit: contain; }
+
+/* 세트 간 휴식 */
+.exercise-rest-page main { display: flex; flex: 1; align-items: center; justify-content: center; flex-direction: column; }
+.exercise-rest-page main > small { color: #91978d; font-size: 11px; }
+.exercise-rest-page main > strong { margin-top: 7px; font-size: 42px; letter-spacing: 1px; }
+.exercise-rest-page main > p { margin: 8px 0 18px; color: #5b9844; font-size: 11px; }
+.exercise-rest-page main > div { display: grid; width: 100%; min-height: 95px; place-items: center; border-radius: 12px; background: #efede4; color: #b1b2aa; font-size: 9px; }
+.exercise-rest-page footer { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.exercise-rest-page footer button { min-height: 46px; border: 1px solid #e5e1d8; border-radius: 9px; background: #fff; color: #293125; font-weight: 700; }
+.exercise-rest-page footer button:last-child { border: 0; background: #4e8b35; color: #fff; }
+
+/* 운동 완료 */
+.exercise-complete-page { overflow-y: auto; text-align: left; scrollbar-width: none; }
+.exercise-complete-page header h1 { margin: 12px 0 14px; font-size: 19px; }
+.exercise-complete-stats { display: grid; grid-template-columns: repeat(3, 1fr); padding: 13px; border-radius: 13px; background: #fff; text-align: center; }
+.exercise-complete-stats span { display: flex; flex-direction: column; gap: 4px; border-right: 1px solid #eeeae1; }
+.exercise-complete-stats span:last-child { border-right: 0; }
+.exercise-complete-stats strong { font-size: 14px; }
+.exercise-complete-stats small { color: #999e95; font-size: 8px; }
+.exercise-complete-visual { display: grid; min-height: 132px; margin-top: 10px; place-items: center; border-radius: 13px; background: #eaf3df; color: #7f9c71; font-size: 10px; }
+.exercise-complete-visual small { font-size: 8px; }
+.exercise-complete-page h2 { margin: 14px 0 4px; font-size: 12px; }
+.exercise-complete-page > p { margin: 0 0 8px; color: #949a90; font-size: 8px; }
+.exercise-feedback { display: flex; flex-direction: column; gap: 7px; }
+.exercise-feedback button { display: flex; min-height: 48px; align-items: center; gap: 11px; padding: 0 13px; border: 1px solid #eeeae1; border-radius: 10px; background: #fff; color: #596054; font-size: 10px; text-align: left; }
+.exercise-feedback button.active { border-color: #6ba453; background: #f7fbf4; }
+.exercise-feedback b { margin-left: auto; color: #5b9844; }
+.exercise-feedback i { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 9px; background: #eef4e8; color: #60954b; font-style: normal; }
+.exercise-feedback button:last-child i { background: #f6efe4; color: #bb8c48; }
+.exercise-discomfort { display: flex; width: 100%; min-height: 57px; margin-top: 10px; align-items: center; justify-content: space-between; padding: 0 13px; border: 1px solid #eeeae1; border-radius: 10px; background: #fff; color: #293125; text-align: left; }
+.exercise-discomfort span { display: flex; flex-direction: column; gap: 4px; font-size: 10px; font-weight: 700; }
+.exercise-discomfort small { color: #9ba097; font-size: 8px; font-weight: 400; }
+.exercise-discomfort b { color: #858b80; font-size: 9px; }
+.exercise-auth-button { min-height: 39px; margin-top: 10px; border: 1px solid #eeeae1; border-radius: 9px; background: #fff; color: #8c9288; font-size: 9px; }
+.exercise-complete-page > .exercise-save-button { margin-top: 8px; }
+
+/* 운동 일시정지 */
+.exercise-pause-page {
+  display: flex;
+  min-height: calc(100dvh - 48px);
+  flex-direction: column;
+  color: #293125;
+}
+
+.exercise-pause-preview {
+  display: grid;
+  min-height: 340px;
+  margin-top: 25px;
+  place-items: center;
+  border-radius: 14px;
+  background: #efede4;
+  color: #a5a89f;
+  font-size: 10px;
+}
+
+.exercise-pause-preview small { font-size: 8px; }
+.exercise-pause-page main { margin-top: auto; text-align: left; }
+.exercise-pause-page main h1 { margin: 0; font-size: 18px; }
+.exercise-pause-page main p { margin: 9px 0 15px; color: #8e948a; font-size: 10px; }
+.exercise-pause-page footer { display: flex; flex-direction: column; gap: 9px; }
+.exercise-pause-page footer button { min-height: 47px; border: 0; border-radius: 9px; background: #4e8b35; color: #fff; font-size: 11px; font-weight: 700; }
+.exercise-pause-page footer button:last-child { border: 1px solid #e6e2d9; background: #fff; color: #293125; }
