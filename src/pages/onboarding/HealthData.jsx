@@ -4,11 +4,11 @@ import './HealthData.css'
 
 const INITIAL_DOCUMENTS = [
   {
-    id: 'aac-result',
-    title: 'AAC 검사 결과',
+    id: 'mcc-result',
+    title: 'MCC 검사 결과',
     description: '검사 결과 사진 또는 PDF',
     action: '추가',
-    documentType: 'AAC_RESULT',
+    documentType: 'MCC_RESULT',
     accept: 'image/jpeg,image/png,.pdf,application/pdf',
   },
   {

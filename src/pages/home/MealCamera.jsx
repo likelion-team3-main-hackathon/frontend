@@ -5,6 +5,7 @@ export default function MealCamera({ onClose, onUsePhoto, guideText = '프레임
   const streamRef = useRef(null)
   const fileRef = useRef(null)
   const [capturedUrl, setCapturedUrl] = useState('')
+  const [capturedFile, setCapturedFile] = useState(null)
   const [cameraError, setCameraError] = useState('')
 
   useEffect(() => {
@@ -36,7 +37,11 @@ export default function MealCamera({ onClose, onUsePhoto, guideText = '프레임
     canvas.height = video.videoHeight
     canvas.getContext('2d').drawImage(video, 0, 0)
     canvas.toBlob((blob) => {
-      if (blob) setCapturedUrl(URL.createObjectURL(blob))
+      if (blob) {
+        const file = new File([blob], `activity-${Date.now()}.jpg`, { type: 'image/jpeg' })
+        setCapturedFile(file)
+        setCapturedUrl(URL.createObjectURL(file))
+      }
     }, 'image/jpeg', .9)
   }
 
@@ -50,12 +55,15 @@ export default function MealCamera({ onClose, onUsePhoto, guideText = '프레임
       {cameraError && <p>{cameraError}</p>}
       <footer>
         <button type="button" className="camera-gallery" onClick={() => fileRef.current?.click()}>▧<small>앨범</small></button>
-        {capturedUrl ? <button type="button" className="camera-use" onClick={() => onUsePhoto(capturedUrl)}>사진 사용</button> : <button type="button" className="camera-shutter" onClick={capture} aria-label="사진 촬영" />}
-        <button type="button" className="camera-close" onClick={capturedUrl ? () => setCapturedUrl('') : onClose}>{capturedUrl ? '↻' : '×'}</button>
+        {capturedUrl ? <button type="button" className="camera-use" onClick={() => onUsePhoto({ url: capturedUrl, file: capturedFile })}>사진 사용</button> : <button type="button" className="camera-shutter" onClick={capture} aria-label="사진 촬영" />}
+        <button type="button" className="camera-close" onClick={capturedUrl ? () => { setCapturedUrl(''); setCapturedFile(null) } : onClose}>{capturedUrl ? '↻' : '×'}</button>
       </footer>
       <input ref={fileRef} type="file" accept="image/*" capture="environment" hidden onChange={(event) => {
         const file = event.target.files?.[0]
-        if (file) setCapturedUrl(URL.createObjectURL(file))
+        if (file) {
+          setCapturedFile(file)
+          setCapturedUrl(URL.createObjectURL(file))
+        }
       }} />
     </section>
   )

@@ -20,6 +20,14 @@ function detailsOf(record) {
   try { return JSON.parse(record?.detailsJson || record?.details || '{}') } catch { return {} }
 }
 
+function statusForItem(item, statuses) {
+  if (statuses[item.id]) return statuses[item.id]
+  const ids = item.routineItemIds || [item.routineItemId]
+  const values = ids.filter(Boolean).map((id) => statuses[id])
+  if (!values.length || values.some((status) => !status)) return null
+  return values.every((status) => status === 'completed') ? 'completed' : 'cancelled'
+}
+
 function nutrientTotals(records, sessionCalories) {
   const meals = records.filter((record) => record.activityType === 'MEAL' || record.type === 'MEAL')
   if (!meals.length) return { calories: sessionCalories, carbs: 0, protein: 0, fat: 0 }
@@ -41,8 +49,8 @@ export default function TodayReport({ items = [], statuses = {}, calories = {}, 
   const selectedDate = useMemo(() => reportDate ? new Date(`${reportDate}T00:00:00`) : currentDate, [reportDate, currentDate])
   const selectedDateKey = dateKey(selectedDate)
   const isToday = selectedDateKey === dateKey(currentDate)
-  const completed = items.filter((item) => statuses[item.id] === 'completed').length
-  const decided = items.filter((item) => statuses[item.id]).length
+  const completed = items.filter((item) => statusForItem(item, statuses) === 'completed').length
+  const decided = items.filter((item) => statusForItem(item, statuses)).length
   const allCompleted = items.length > 0 && completed === items.length
   const sessionCalories = items.reduce((sum, item) => sum + Number(calories[item.id] || 0), 0)
 
@@ -79,7 +87,7 @@ export default function TodayReport({ items = [], statuses = {}, calories = {}, 
   const nutrients = useMemo(() => nutrientTotals(records, sessionCalories), [records, sessionCalories])
   const waterRecord = records.find((record) => detailsOf(record).category === 'WATER')
   const water = Number(detailsOf(waterRecord).glasses || (isToday ? homeMockData.condition.water.current : 0))
-  const exercises = items.filter((item) => item.activityType === 'EXERCISE' && statuses[item.id] === 'completed')
+  const exercises = items.filter((item) => ['EXERCISE', 'REHABILITATION'].includes(item.activityType) && statusForItem(item, statuses) === 'completed')
   const recordedExerciseResults = records
     .filter((record) => record.activityType === 'EXERCISE' || record.type === 'EXERCISE')
     .map(detailsOf)
@@ -120,7 +128,10 @@ export default function TodayReport({ items = [], statuses = {}, calories = {}, 
 
         <div className="report-activity-heading"><h2>오늘 할 일 <b>{completed} / {items.length}</b></h2><span>3개 루틴 종합</span></div>
         <div className="report-activity-list">
-          {items.map((item) => <article className={statuses[item.id] || ''} key={item.id}><i /><div><strong>{item.type} · {item.title}</strong><small>{item.time} · {item.activityType === 'MEAL' && statuses[item.id] === 'completed' ? `섭취 ${(calories[item.id] || 0).toLocaleString()} kcal` : item.detail}</small></div><span>{statuses[item.id] === 'completed' ? '✓' : statuses[item.id] === 'cancelled' ? '−' : ''}</span></article>)}
+          {items.map((item) => {
+            const status = statusForItem(item, statuses)
+            return <article className={status || ''} key={item.id}><i /><div><strong>{item.type} · {item.title}</strong><small>{item.time} · {item.activityType === 'MEAL' && status === 'completed' ? `섭취 ${(calories[item.id] || 0).toLocaleString()} kcal` : item.detail}</small></div><span>{status === 'completed' ? '✓' : status === 'cancelled' ? '−' : ''}</span></article>
+          })}
         </div>
       </div>
       <BottomNav active="home" onNavigate={onNavigate} />

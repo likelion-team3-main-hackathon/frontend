@@ -22,7 +22,9 @@ export default function ExerciseWorkout({ exercises, initialProgress, onExit, on
   const [seconds, setSeconds] = useState(() => initialProgress?.seconds ?? secondsFor(exercises[initialProgress?.exerciseIndex || 0]))
   const [paused, setPaused] = useState(false)
   const [feedback, setFeedback] = useState('GOOD')
+  const [evidencePhoto, setEvidencePhoto] = useState(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
   const exercise = exercises[exerciseIndex]
   const isTimed = secondsFor(exercise) > 0
   const totalSets = useMemo(() => exercises.reduce((sum, item) => sum + Math.max(1, item.sets), 0), [exercises])
@@ -81,6 +83,7 @@ export default function ExerciseWorkout({ exercises, initialProgress, onExit, on
   })
 
   if (phase === 'camera') return <MealCamera onClose={() => setPhase('exercise')} onUsePhoto={() => setPhase('exercise')} guideText={'전신이 프레임 안에 보이도록 맞춰주세요\n동작 자세를 확인할게요'} />
+  if (phase === 'evidence-camera') return <MealCamera onClose={() => setPhase('complete')} onUsePhoto={(captured) => { setEvidencePhoto(captured); setPhase('complete') }} guideText={'운동 인증 사진을 촬영해주세요\n선택한 사진은 기록과 함께 저장돼요'} />
 
   if (phase === 'pause-menu') return <section className="exercise-pause-page">
     <div className="exercise-pause-preview">일시정지된 화면 <small>(준비)</small></div>
@@ -98,8 +101,18 @@ export default function ExerciseWorkout({ exercises, initialProgress, onExit, on
         {[['EASY', '↑', '여유 있었어요'], ['GOOD', '=', '딱 맞았어요'], ['HARD', '↓', '버거웠어요']].map(([value, icon, label]) => <button type="button" className={feedback === value ? 'active' : ''} key={value} onClick={() => setFeedback(value)}><i>{icon}</i>{label}{feedback === value && <b>✓</b>}</button>)}
       </div>
       <button type="button" className="exercise-discomfort"><span>불편했던 곳이 있나요?<small>해당 부위 동작을 다음에 빼드려요.</small></span><b>선택 ›</b></button>
-      <button type="button" className="exercise-auth-button">○ 사진 인증 (선택)</button>
-      <button type="button" className="exercise-save-button" disabled={isSaving} onClick={async () => { setIsSaving(true); await onFinish({ feedback, minutes: workoutMinutes, calories, exerciseCount: exercises.length, totalSets }) }}>{isSaving ? '저장 중…' : '기록 저장'}</button>
+      <button type="button" className="exercise-auth-button" onClick={() => setPhase('evidence-camera')}>{evidencePhoto ? '✓ 인증 사진 선택됨' : '○ 사진 인증 (선택)'}</button>
+      {saveError && <p>{saveError}</p>}
+      <button type="button" className="exercise-save-button" disabled={isSaving} onClick={async () => {
+        setIsSaving(true)
+        setSaveError('')
+        try {
+          await onFinish({ feedback, minutes: workoutMinutes, calories, exerciseCount: exercises.length, totalSets, photoFile: evidencePhoto?.file })
+        } catch (error) {
+          setSaveError(error.message || '운동 기록을 저장하지 못했어요.')
+          setIsSaving(false)
+        }
+      }}>{isSaving ? '저장 중…' : '기록 저장'}</button>
     </section>
   }
 

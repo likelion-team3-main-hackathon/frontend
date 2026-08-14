@@ -5,75 +5,58 @@ import mealIcon from '../../assets/icons/routine/meal.png'
 import nextIcon from '../../assets/icons/next.png'
 import './RoutineDetail.css'
 
-const MOCK_MEAL_DAYS = [
-  {
-    id: 'meal-day-1', week: 3, dayNumber: 1, label: '오늘', summary: '3끼 · 1,820 kcal', meta: '탄 210 · 단 128 · 지 54',
-    items: [
-      { id: 'breakfast', mealType: '아침', name: '그릭요거트볼', meta: '420 kcal · 탄 38 단 26 지 12' },
-      { id: 'lunch', mealType: '점심', name: '간장계란밥 외 2개', meta: '610 kcal · 탄 82 단 41 지 18' },
-      { id: 'dinner', mealType: '저녁', name: '닭가슴살 샐러드', meta: '510 kcal · 탄 32 단 41 지 18' },
-    ],
-  },
-  {
-    id: 'meal-day-2', week: 3, dayNumber: 2, summary: '3끼 · 1,760 kcal', meta: '탄 198 · 단 121 · 지 51',
-    items: [
-      { id: 'meal-2-1', mealType: '아침', name: '오트밀', meta: '410 kcal · 탄 62 단 22 지 9' },
-      { id: 'meal-2-2', mealType: '점심', name: '연어 포케', meta: '690 kcal · 탄 74 단 46 지 24' },
-      { id: 'meal-2-3', mealType: '저녁', name: '두부 스테이크', meta: '660 kcal · 탄 62 단 53 지 18' },
-    ],
-  },
-]
-
-const MOCK_EXERCISE_DAYS = [
-  {
-    id: 'exercise-day-1', week: 3, dayNumber: 1, label: '오늘', summary: '팔', meta: '8동작 · 24분 · 이두/삼두',
-    items: [
-      { id: 'dumbbell-curl', name: '덤벨 컬', meta: '12회 3세트 · 7kg' },
-      { id: 'hammer-curl', name: '해머 컬', meta: '12회 3세트 · 7kg' },
-      { id: 'overhead-press', name: '오버헤드 프레스', meta: '10회 3세트 · 12kg' },
-    ],
-  },
-  {
-    id: 'exercise-day-2', week: 3, dayNumber: 2, summary: '하체', meta: '6동작 · 38분 · 대퇴/둔근',
-    items: [
-      { id: 'squat', name: '스쿼트', meta: '12회 3세트' },
-      { id: 'lunge', name: '런지', meta: '10회 3세트' },
-    ],
-  },
-]
-
 function isMealRoutine(routine) {
   return routine?.type === 'MEAL' || /식단|식사|지중해/.test(routine?.title || '')
 }
 
-function exerciseDaysFromApi(detail) {
+function parseContent(content) {
+  if (content && typeof content === 'object') return content
+  try { return JSON.parse(content || '{}') } catch { return {} }
+}
+
+function routineDaysFromApi(detail, tab) {
   return (detail?.days || []).map((day, index) => {
     const sections = day.sections || []
     const items = sections.flatMap((section) =>
-      (section.exercises || []).map((exercise) => ({
-        id: exercise.exerciseId,
-        name: exercise.name,
-        meta: [
-          `${exercise.targetValue}${exercise.targetUnit === 'SECONDS' ? '초' : exercise.targetUnit === 'MINUTES' ? '분' : '회'}`,
-          `${exercise.sets || 1}세트`,
-          exercise.restSeconds ? `휴식 ${exercise.restSeconds}초` : null,
-        ].filter(Boolean).join(' · '),
-      })),
+      (section.exercises || [])
+        .filter((exercise) => tab === 'meal' ? exercise.activityType === 'MEAL' : exercise.activityType !== 'MEAL')
+        .map((exercise) => {
+          const content = parseContent(exercise.content)
+          return tab === 'meal'
+            ? {
+                id: exercise.exerciseId,
+                mealType: section.title?.replace(' 식단', '') || '식단',
+                name: exercise.name,
+                meta: `${Number(content.calories || exercise.targetValue || 0).toLocaleString()} kcal · 탄 ${content.carbohydrateGrams || 0} 단 ${content.proteinGrams || 0} 지 ${content.fatGrams || 0}`,
+              }
+            : {
+                id: exercise.exerciseId,
+                name: exercise.name,
+                sets: exercise.sets || 1,
+                meta: [
+                  `${exercise.targetValue}${exercise.targetUnit === 'SECONDS' ? '초' : exercise.targetUnit === 'MINUTES' ? '분' : '회'}`,
+                  `${exercise.sets || 1}세트`,
+                  exercise.restSeconds ? `휴식 ${exercise.restSeconds}초` : null,
+                ].filter(Boolean).join(' · '),
+              }
+        }),
     )
-    const totalSets = sections.reduce((total, section) =>
-      total + (section.exercises || []).reduce((sum, exercise) => sum + (exercise.sets || 1), 0), 0)
+    const totalSets = items.reduce((total, item) => total + Number(item.sets || 0), 0)
     const sectionNames = sections
       .map((section) => section.title)
       .filter(Boolean)
       .filter((title, titleIndex, titles) => titles.indexOf(title) === titleIndex)
-    const focus = sectionNames[0] || '운동 루틴'
+    const focus = sectionNames[0] || (tab === 'meal' ? '식단 루틴' : '운동 루틴')
+    const calories = items.reduce((sum, item) => sum + Number(String(item.meta).match(/[\d,]+(?= kcal)/)?.[0]?.replaceAll(',', '') || 0), 0)
     return {
       id: day.routineDayId,
       week: day.week,
       dayNumber: index + 1,
       label: day.scheduledDate === new Date().toISOString().slice(0, 10) ? '오늘' : '',
       summary: focus,
-      meta: `${items.length}동작 · ${day.estimatedMinutes || 0}분 · 총 ${totalSets}세트`,
+      meta: tab === 'meal'
+        ? `${items.length}끼 · ${calories.toLocaleString()} kcal`
+        : `${items.length}동작 · ${day.estimatedMinutes || 0}분 · 총 ${totalSets}세트`,
       items,
     }
   }).filter((day) => day.items.length)
@@ -93,10 +76,11 @@ export default function RoutineDetail({ routine, onBack, onOpenAi }) {
     return () => { active = false }
   }, [routine?.id])
 
-  const apiExerciseDays = useMemo(() => exerciseDaysFromApi(detail), [detail])
+  const apiExerciseDays = useMemo(() => routineDaysFromApi(detail, 'exercise'), [detail])
+  const apiMealDays = useMemo(() => routineDaysFromApi(detail, 'meal'), [detail])
   const days = activeTab === 'meal'
-    ? MOCK_MEAL_DAYS
-    : apiExerciseDays.length ? apiExerciseDays : MOCK_EXERCISE_DAYS
+    ? apiMealDays
+    : apiExerciseDays
   const currentWeek = days[0]?.week || routine?.currentWeek || 1
 
   useEffect(() => {
@@ -138,6 +122,7 @@ export default function RoutineDetail({ routine, onBack, onOpenAi }) {
       <h2 className="routine-week-heading">이번 주 · {currentWeek}주차</h2>
 
       <div className="routine-day-list">
+        {detail && days.length === 0 && <p>이 루틴에는 {activeTab === 'meal' ? '식단' : '운동'} 일정이 없어요.</p>}
         {days.map((day) => {
           const isExpanded = expandedDays.has(day.id)
           return (

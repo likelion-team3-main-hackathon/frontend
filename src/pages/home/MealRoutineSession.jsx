@@ -40,7 +40,7 @@ export default function MealRoutineSession({ item, onDecision, onClose }) {
   const [foods, setFoods] = useState(() => initialFoods(item))
   const [isAdding, setIsAdding] = useState(false)
   const [draft, setDraft] = useState(EMPTY_FOOD)
-  const [photoUrl, setPhotoUrl] = useState('')
+  const [photo, setPhoto] = useState(null)
   const [view, setView] = useState('list')
   const [selectedFoodId, setSelectedFoodId] = useState(null)
   const [recognitionNotice, setRecognitionNotice] = useState('')
@@ -66,7 +66,7 @@ export default function MealRoutineSession({ item, onDecision, onClose }) {
     setIsSaving(true)
     setError('')
     try {
-      await onDecision?.(item, 'completed', { foods, mealType: mealTypeCode(item.type) })
+      await onDecision?.(item, 'completed', { foods, mealType: mealTypeCode(item.type), photoFile: photo?.file })
       onClose?.()
     } catch (requestError) {
       setError(requestError.message || '식단 기록을 저장하지 못했어요.')
@@ -75,13 +75,13 @@ export default function MealRoutineSession({ item, onDecision, onClose }) {
   }
 
   const selectedFood = foods.find((food) => food.id === selectedFoodId)
-  if (view === 'camera') return <MealCamera onClose={() => setView('list')} onUsePhoto={(url) => {
-    setPhotoUrl(url)
+  if (view === 'camera') return <MealCamera onClose={() => setView('list')} onUsePhoto={(captured) => {
+    setPhoto(captured)
     setFoods((current) => current.map((food) => ({ ...food, autoRecognized: true })))
     setRecognitionNotice('사진을 촬영했어요. 인식된 음식 목록을 확인해주세요.')
     setView('list')
   }} />
-  if (view === 'detail' && selectedFood) return <MealFoodDetail food={selectedFood} photoUrl={photoUrl} routineId={item.routineId || item.id} onBack={() => setView('list')} onSave={(updatedFood) => {
+  if (view === 'detail' && selectedFood) return <MealFoodDetail food={selectedFood} photoUrl={photo?.url || ''} routineId={item.routineId || item.id} onBack={() => setView('list')} onSave={(updatedFood) => {
     setFoods((current) => current.map((food) => food.id === updatedFood.id ? updatedFood : food))
     setView('list')
   }} onDelete={() => {
@@ -97,8 +97,8 @@ export default function MealRoutineSession({ item, onDecision, onClose }) {
         <h1>{item.routineTitle || '식단 루틴'} {item.dayNumber || 1}일차</h1>
       </header>
 
-      <button type="button" className="meal-photo-card" onClick={() => setView('camera')} style={photoUrl ? { backgroundImage: `url(${photoUrl})` } : undefined}>
-        {!photoUrl && <><img src={cameraIcon} alt="" /><small>사진 인증</small></>}
+      <button type="button" className="meal-photo-card" onClick={() => setView('camera')} style={photo?.url ? { backgroundImage: `url(${photo.url})` } : undefined}>
+        {!photo?.url && <><img src={cameraIcon} alt="" /><small>사진 인증</small></>}
       </button>
       {recognitionNotice && <p className="meal-recognition-notice">{recognitionNotice}</p>}
 

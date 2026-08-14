@@ -16,7 +16,7 @@ import PlaceholderPage from './pages/placeholder/PlaceholderPage'
 import RoutineSession from './pages/home/RoutineSession'
 import TodayReport from './pages/home/TodayReport'
 import AiRoutineChat from './pages/home/AiRoutineChat'
-import { recordMealRoutine, recordRoutineItem } from './api/record'
+import { recordMealRoutine, recordRoutineItems } from './api/record'
 import './Router.css'
 
 function pageForProfile(profile) {
@@ -42,16 +42,21 @@ export default function Router() {
 
   async function saveRoutineStatus(item, status, mealData, exerciseData) {
     if (mealData && status === 'completed') {
-      await recordMealRoutine(item, mealData.foods, mealData.mealType)
+      await recordMealRoutine(item, mealData.foods, mealData.mealType, mealData.photoFile)
       const calories = mealData.foods.reduce((total, food) => total + Number(food.calories || 0), 0)
       setRoutineCalories((current) => ({ ...current, [item.id]: calories }))
-    } else if (item.routineItemId != null) {
-      await recordRoutineItem(item.routineItemId, status, item.activityType || 'EXERCISE', exerciseData || {})
+    } else if (item.routineItemId != null || item.exercises?.length) {
+      await recordRoutineItems(item, status, item.activityType || 'EXERCISE', exerciseData || {})
     }
     if (exerciseData && status === 'completed') {
       setExerciseResults((current) => ({ ...current, [item.id]: exerciseData }))
     }
-    setRoutineStatuses((current) => ({ ...current, [item.id]: status }))
+    setRoutineStatuses((current) => {
+      const next = { ...current, [item.id]: status }
+      const linkedIds = (item.routineItemIds || [item.routineItemId]).filter(Boolean)
+      linkedIds.forEach((id) => { next[id] = status })
+      return next
+    })
   }
 
   useEffect(() => {

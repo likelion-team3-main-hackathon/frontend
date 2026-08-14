@@ -8,12 +8,12 @@ import { routineRecommendationGroups } from '../../mocks/routineRecommendations'
 import './RoutineSelection.css'
 
 const ROUTINE_OPTIONS = {
-  'metabolic-4': { durationWeeks: 4, exerciseDaysPerWeek: 4, preferredExerciseTypes: ['WALKING', 'STRENGTH'] },
-  'core-rehab': { durationWeeks: 3, exerciseDaysPerWeek: 3, preferredExerciseTypes: ['REHABILITATION', 'CORE'] },
-  'light-cardio': { durationWeeks: 2, exerciseDaysPerWeek: 5, preferredExerciseTypes: ['WALKING'] },
-  'core-4': { durationWeeks: 4, exerciseDaysPerWeek: 3, preferredExerciseTypes: ['REHABILITATION', 'CORE'] },
-  'core-stable': { durationWeeks: 3, exerciseDaysPerWeek: 3, preferredExerciseTypes: ['CORE'] },
-  'stretch-2': { durationWeeks: 2, exerciseDaysPerWeek: 7, preferredExerciseTypes: ['STRETCHING'] },
+  'metabolic-4': { durationWeeks: 4, mealCountPerDay: 3, exerciseDaysPerWeek: 4, preferredExerciseTypes: ['WALKING', 'STRENGTH'] },
+  'core-rehab': { durationWeeks: 3, mealCountPerDay: 0, exerciseDaysPerWeek: 3, preferredExerciseTypes: ['REHABILITATION', 'CORE'] },
+  'light-cardio': { durationWeeks: 2, mealCountPerDay: 0, exerciseDaysPerWeek: 5, preferredExerciseTypes: ['WALKING'] },
+  'core-4': { durationWeeks: 4, mealCountPerDay: 0, exerciseDaysPerWeek: 3, preferredExerciseTypes: ['REHABILITATION', 'CORE'] },
+  'core-stable': { durationWeeks: 3, mealCountPerDay: 0, exerciseDaysPerWeek: 3, preferredExerciseTypes: ['CORE'] },
+  'stretch-2': { durationWeeks: 2, mealCountPerDay: 0, exerciseDaysPerWeek: 7, preferredExerciseTypes: ['STRETCHING'] },
 }
 
 function today() {
@@ -43,7 +43,7 @@ export default function RoutineSelection({ analysisId, onComplete }) {
         analysisId,
         startDate: today(),
         durationWeeks: option.durationWeeks,
-        mealCountPerDay: 3,
+        mealCountPerDay: option.mealCountPerDay,
         exerciseDaysPerWeek: option.exerciseDaysPerWeek,
         preferredExerciseTypes: option.preferredExerciseTypes,
         includeExpertContents: true,

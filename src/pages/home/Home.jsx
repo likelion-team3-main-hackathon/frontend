@@ -46,30 +46,64 @@ function scheduledItems(routines, date) {
     .flatMap(({ routine, day }) => {
       const dayNumber = Math.max(1, Math.round((new Date(`${date}T00:00:00`) - new Date(`${routine.startDate}T00:00:00`)) / 86400000) + 1)
       const exercises = (day.sections || []).flatMap((section) => (section.exercises || []).map((exercise) => ({
-        id: exercise.exerciseId,
-        exerciseId: exercise.exerciseId,
-        name: exercise.name,
-        targetValue: Number(exercise.targetValue || 0),
-        targetUnit: exercise.targetUnit || 'REPETITIONS',
-        sets: Number(exercise.sets || 1),
-        restSeconds: Number(exercise.restSeconds || 0),
-        videoUrl: exercise.videoUrl || '',
-        thumbnailUrl: exercise.thumbnailUrl || '',
-        sectionType: section.sectionType,
-      })))
-      return exercises.map((exercise) => ({
-        id: exercise.exerciseId,
-        routineItemId: exercise.exerciseId,
-        activityType: 'EXERCISE',
+          id: exercise.exerciseId,
+          exerciseId: exercise.exerciseId,
+          activityType: exercise.activityType || 'EXERCISE',
+          name: exercise.name,
+          targetValue: Number(exercise.targetValue || 0),
+          targetUnit: exercise.targetUnit || 'REPETITIONS',
+          sets: Number(exercise.sets || 1),
+          restSeconds: Number(exercise.restSeconds || 0),
+          videoUrl: exercise.videoUrl || '',
+          thumbnailUrl: exercise.thumbnailUrl || '',
+          content: exercise.content,
+          scheduledAt: exercise.scheduledAt,
+          estimatedMinutes: Number(exercise.estimatedMinutes || 0),
+          sectionType: section.sectionType,
+          sectionTitle: section.title,
+        })))
+      const meals = exercises.filter((exercise) => exercise.activityType === 'MEAL').map((meal) => {
+        const details = parseDetails({ details: meal.content })
+        const scheduledTime = meal.scheduledAt
+          ? new Date(meal.scheduledAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Seoul' })
+          : '시간 미정'
+        return {
+          id: meal.id,
+          routineItemId: meal.id,
+          routineItemIds: [meal.id],
+          activityType: 'MEAL',
+          routineId: routine.id,
+          routineTitle: routine.title,
+          scheduledDate: date,
+          dayNumber,
+          type: meal.sectionTitle?.replace(' 식단', '') || '식단',
+          time: scheduledTime,
+          title: meal.name,
+          detail: `${Number(details.calories || meal.targetValue || 0).toLocaleString()} kcal`,
+          foods: details.foods || [],
+          details,
+        }
+      })
+      const movements = exercises.filter((exercise) => exercise.activityType !== 'MEAL')
+      if (!movements.length) return meals
+      const activityType = movements.every((exercise) => exercise.activityType === 'REHABILITATION')
+        ? 'REHABILITATION'
+        : 'EXERCISE'
+      return [...meals, {
+        id: `routine-${routine.id}-day-${day.routineDayId}-movement`,
+        routineItemId: movements[0].id,
+        routineItemIds: movements.map((exercise) => exercise.id),
+        activityType,
         routineId: routine.id,
         routineTitle: routine.title,
+        scheduledDate: date,
         dayNumber,
-        type: exercise.sectionType === 'COOL_DOWN' ? '마무리' : '운동',
-        time: `${day.estimatedMinutes || 0}분 예정`,
-        title: exercise.name,
-        detail: `${exercise.targetValue} ${exercise.targetUnit === 'SECONDS' ? '초' : '회'} · ${exercise.sets}세트`,
-        exercises,
-      }))
+        type: activityType === 'REHABILITATION' ? '재활' : '운동',
+        time: `${Math.max(...movements.map((exercise) => exercise.estimatedMinutes), Number(day.estimatedMinutes || 0))}분 예정`,
+        title: routine.title,
+        detail: `${movements.length}동작 · ${movements.reduce((sum, exercise) => sum + exercise.sets, 0)}세트`,
+        exercises: movements,
+      }]
     })
     .filter((item) => item.id != null && item.title)
 }
@@ -83,6 +117,14 @@ function parseDetails(record) {
 function isMealActivity(item) {
   if (item.activityType === 'MEAL') return true
   return ['아침', '점심', '저녁', '끼니', '식단'].some((keyword) => item.type?.includes(keyword))
+}
+
+function statusForItem(item, statuses) {
+  if (statuses[item.id]) return statuses[item.id]
+  const ids = item.routineItemIds || [item.routineItemId]
+  const values = ids.filter(Boolean).map((id) => statuses[id])
+  if (!values.length || values.some((status) => !status)) return null
+  return values.every((status) => status === 'completed') ? 'completed' : 'cancelled'
 }
 
 export default function Home({
@@ -102,8 +144,8 @@ export default function Home({
   const weekDates = useMemo(getWeekDates, [])
   const todayKey = weekDates.find((date) => date.isToday)?.key || weekDates[0].key
   const [selectedDate, setSelectedDate] = useState(todayKey)
-  const [userName, setUserName] = useState(homeMockData.userName)
-  const [activeRoutines, setActiveRoutines] = useState(homeMockData.activeRoutines)
+  const [userName, setUserName] = useState('사용자')
+  const [activeRoutines, setActiveRoutines] = useState([])
   const [routineDetails, setRoutineDetails] = useState([])
   const [coaching, setCoaching] = useState(homeMockData.condition.coaching)
   const [water, setWater] = useState(homeMockData.condition.water.current)
@@ -116,7 +158,7 @@ export default function Home({
     let active = true
     Promise.allSettled([getHome(), getRoutines(), getLatestCoaching()]).then(async ([home, routines, coachingResult]) => {
       if (!active) return
-      if (home.status === 'fulfilled') setUserName(home.value?.data?.user?.name || homeMockData.userName)
+      if (home.status === 'fulfilled') setUserName(home.value?.data?.user?.name || '사용자')
       if (coachingResult.status === 'fulfilled') setCoaching(coachingResult.value?.data?.message || homeMockData.condition.coaching)
       if (routines.status !== 'fulfilled') return
 
@@ -163,7 +205,7 @@ export default function Home({
       if (!active) return
       const nextRecords = response?.data || []
       const loadedStatuses = nextRecords.reduce((statuses, record) => {
-        if (!record.routineItemId) return statuses
+        if (!record.routineItemId || statuses[record.routineItemId]) return statuses
         const details = parseDetails(record)
         statuses[record.routineItemId] = details.skipped || record.status === 'SKIPPED'
           ? 'cancelled'
@@ -171,7 +213,7 @@ export default function Home({
         return statuses
       }, {})
       const loadedCalories = nextRecords.reduce((calories, record) => {
-        if (!record.routineItemId) return calories
+        if (!record.routineItemId || calories[record.routineItemId] != null) return calories
         const details = parseDetails(record)
         if (record.activityType === 'MEAL' || record.type === 'MEAL') calories[record.routineItemId] = Number(details.calories || 0)
         return calories
@@ -186,14 +228,10 @@ export default function Home({
   }, [selectedDate])
 
   const apiScheduled = scheduledItems(routineDetails, selectedDate)
-  const displayedRoutines = apiScheduled.length
-    ? apiScheduled
-    : selectedDate === todayKey
-      ? homeMockData.todayRoutines
-      : []
-  const nextRoutineIndex = displayedRoutines.findIndex((item) => !routineStatuses[item.id])
-  const completedCount = displayedRoutines.filter((item) => routineStatuses[item.id] === 'completed').length
-  const allDecided = displayedRoutines.length > 0 && displayedRoutines.every((item) => routineStatuses[item.id])
+  const displayedRoutines = apiScheduled
+  const nextRoutineIndex = displayedRoutines.findIndex((item) => !statusForItem(item, routineStatuses))
+  const completedCount = displayedRoutines.filter((item) => statusForItem(item, routineStatuses) === 'completed').length
+  const allDecided = displayedRoutines.length > 0 && displayedRoutines.every((item) => statusForItem(item, routineStatuses))
 
   async function changeWater(change) {
     const next = Math.max(0, Math.min(8, water + change))
@@ -258,7 +296,7 @@ export default function Home({
           )}
           {displayedRoutines.length === 0 && <div className="empty-day-card">이 날짜에 예정된 루틴이 없어요.</div>}
           {displayedRoutines.map((item, index) => {
-            const status = routineStatuses[item.id]
+            const status = statusForItem(item, routineStatuses)
             const isPrimary = index === nextRoutineIndex
             const mealActivity = isMealActivity(item)
             const activityIcon = mealActivity && status === 'completed'
