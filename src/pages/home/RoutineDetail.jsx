@@ -14,6 +14,11 @@ function parseContent(content) {
   try { return JSON.parse(content || '{}') } catch { return {} }
 }
 
+function dateLabel(value) {
+  const [, month, day] = String(value || '').split('-')
+  return month && day ? `${Number(month)}월 ${Number(day)}일` : ''
+}
+
 function routineDaysFromApi(detail, tab) {
   return (detail?.days || []).map((day, index) => {
     const sections = day.sections || []
@@ -44,27 +49,30 @@ function routineDaysFromApi(detail, tab) {
         }),
     )
     const totalSets = items.reduce((total, item) => total + Number(item.sets || 0), 0)
-    const sectionNames = sections
-      .map((section) => section.title)
+    const mainExerciseNames = items
+      .filter((item) => item.sectionType === 'MAIN_EXERCISE')
+      .map((item) => item.name)
       .filter(Boolean)
-      .filter((title, titleIndex, titles) => titles.indexOf(title) === titleIndex)
-    const mainSection = sections.find((section) => section.sectionType === 'MAIN_EXERCISE')
     const focus = tab === 'meal'
-      ? sectionNames.join(' · ') || '식단 루틴'
-      : mainSection?.title || sectionNames.find((title) => !/준비|워밍업|마무리/.test(title)) || '운동 루틴'
+      ? day.mealSummaryTitle || items.map((item) => item.name).filter(Boolean).join(' · ') || '식단 루틴'
+      : day.exerciseSummaryTitle || mainExerciseNames.join(' · ') || items.map((item) => item.name).filter(Boolean).join(' · ') || '운동 루틴'
     const calories = items.reduce((sum, item) => sum + Number(String(item.meta).match(/[\d,]+(?= kcal)/)?.[0]?.replaceAll(',', '') || 0), 0)
     return {
       id: day.routineDayId,
       week: day.week,
       dayNumber: index + 1,
+      scheduledDate: day.scheduledDate,
       label: day.scheduledDate === new Date().toISOString().slice(0, 10) ? '오늘' : '',
       summary: focus,
       meta: tab === 'meal'
         ? `${items.length}끼 · ${calories.toLocaleString()} kcal`
-        : `${items.length}동작 · ${day.estimatedMinutes || 0}분 · 총 ${totalSets}세트`,
+        : `${dateLabel(day.scheduledDate)} · ${index + 1}일차 · ${items.length}동작 · ${day.estimatedMinutes || 0}분 · 총 ${totalSets}세트`,
       items,
     }
-  }).filter((day) => day.items.length)
+  }).filter((day) => day.items.length).map((day, index) => ({
+    ...day,
+    sequenceNumber: index + 1,
+  }))
 }
 
 export default function RoutineDetail({ routine, onBack, onOpenAi }) {
@@ -130,12 +138,14 @@ export default function RoutineDetail({ routine, onBack, onOpenAi }) {
         {detail && days.length === 0 && <p>이 루틴에는 {activeTab === 'meal' ? '식단' : '운동'} 일정이 없어요.</p>}
         {days.map((day) => {
           const isExpanded = expandedDays.has(day.id)
+          const displayNumber = activeTab === 'exercise' ? day.sequenceNumber : day.dayNumber
+          const displayUnit = activeTab === 'exercise' ? '회차' : '일차'
           return (
           <article className={`routine-day-schedule ${isExpanded ? 'expanded' : 'collapsed'} ${day.label === '오늘' ? 'today' : ''}`} key={day.id}>
             <button type="button" className="routine-day-header" onClick={() => toggleDay(day.id)} aria-expanded={isExpanded}>
               <span className="routine-day-number">
-                <strong>{day.dayNumber}</strong>
-                <small>일차</small>
+                <strong>{displayNumber}</strong>
+                <small>{displayUnit}</small>
               </span>
               <span className="routine-day-copy"><span><strong>{day.summary}</strong>{day.label && <em>{day.label}</em>}</span><small>{isExpanded ? day.meta : day.items.map((item) => item.name).join(' · ')}</small></span>
               <span className="routine-day-chevron">{isExpanded ? '⌃' : '⌄'}</span>
@@ -148,7 +158,7 @@ export default function RoutineDetail({ routine, onBack, onOpenAi }) {
                 </div>
               ))}
             </div>}
-            {isExpanded && <button type="button" className="routine-day-detail">{day.dayNumber}일차 자세히 보기 <span>›</span></button>}
+            {isExpanded && <button type="button" className="routine-day-detail">{displayNumber}{displayUnit} 자세히 보기 <span>›</span></button>}
           </article>
         )})}
       </div>
