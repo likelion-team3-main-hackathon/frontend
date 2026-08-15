@@ -16,6 +16,15 @@ import PlaceholderPage from './pages/placeholder/PlaceholderPage'
 import RoutineSession from './pages/home/RoutineSession'
 import TodayReport from './pages/home/TodayReport'
 import AiRoutineChat from './pages/home/AiRoutineChat'
+import MyPage from './pages/my/MyPage'
+import MarketPage from './pages/market/MarketPage'
+import MarketProductDetail from './pages/market/MarketProductDetail'
+import ExpertRoutineDetail from './pages/market/ExpertRoutineDetail'
+import MarketCart from './pages/market/MarketCart'
+import MarketCheckout from './pages/market/MarketCheckout'
+import PaymentComplete from './pages/market/PaymentComplete'
+import AnalysisLab from './pages/analysis/AnalysisLab'
+import MealAnalysisLab from './pages/analysis/MealAnalysisLab'
 import { recordMealRoutine, recordRoutineItems } from './api/record'
 import './Router.css'
 
@@ -39,6 +48,17 @@ export default function Router() {
   const [todayReportItems, setTodayReportItems] = useState([])
   const [reportDate, setReportDate] = useState(null)
   const [aiChatBackPage, setAiChatBackPage] = useState('home')
+  const [selectedMarketProduct, setSelectedMarketProduct] = useState(null)
+  const [selectedExpertRoutine, setSelectedExpertRoutine] = useState(null)
+  const [marketTab, setMarketTab] = useState('meal')
+  const [checkoutOrder, setCheckoutOrder] = useState(null)
+  const [checkoutBackPage, setCheckoutBackPage] = useState('market')
+
+  function openCheckout(order, backPage) {
+    setCheckoutOrder(order)
+    setCheckoutBackPage(backPage)
+    setPage('market-checkout')
+  }
 
   async function saveRoutineStatus(item, status, mealData, exerciseData) {
     if (mealData && status === 'completed') {
@@ -193,9 +213,47 @@ export default function Router() {
           />
         )}
 
-        {['analysis', 'market', 'community', 'my'].includes(page) && (
+        {page === 'community' && (
           <PlaceholderPage page={page} onNavigate={setPage} />
         )}
+
+        {page === 'analysis' && <AnalysisLab onNavigate={(nextPage) => {
+          if (nextPage === 'ai-chat') setAiChatBackPage('analysis')
+          setPage(nextPage)
+        }} />}
+
+        {page === 'meal-analysis' && <MealAnalysisLab onBack={() => setPage('analysis')} />}
+
+        {page === 'market' && <MarketPage
+          onNavigate={setPage}
+          onOpenCart={() => setPage('market-cart')}
+          initialTab={marketTab}
+          onTabChange={setMarketTab}
+          onOpenProduct={(product) => {
+            setSelectedMarketProduct(product)
+            setPage('market-product')
+          }}
+          onOpenExpert={(expertRoutine) => {
+            setMarketTab('expert')
+            setSelectedExpertRoutine(expertRoutine)
+            setPage('expert-routine')
+          }}
+        />}
+
+        {page === 'market-product' && <MarketProductDetail product={selectedMarketProduct} onBack={() => setPage('market')} onOpenCart={() => setPage('market-cart')} onBuyNow={(order) => openCheckout(order, 'market-product')} />}
+
+        {page === 'expert-routine' && <ExpertRoutineDetail routine={selectedExpertRoutine} onBack={() => setPage('market')} />}
+
+        {page === 'market-cart' && <MarketCart onBack={() => setPage('market')} onCheckout={(order) => openCheckout(order, 'market-cart')} />}
+
+        {page === 'market-checkout' && <MarketCheckout order={checkoutOrder} onBack={() => setPage(checkoutBackPage)} onComplete={() => {
+          if (checkoutOrder?.source === 'cart') localStorage.removeItem('marketCart')
+          setPage('payment-complete')
+        }} />}
+
+        {page === 'payment-complete' && <PaymentComplete onBack={() => setPage('market')} />}
+
+        {page === 'my' && <MyPage initialProfile={profile} onNavigate={setPage} onResetRoutine={() => setPage('goal')} />}
 
         {page === 'routine-detail' && (
           <RoutineDetail
