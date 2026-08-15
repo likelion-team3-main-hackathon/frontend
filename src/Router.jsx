@@ -25,6 +25,9 @@ import MarketCheckout from './pages/market/MarketCheckout'
 import PaymentComplete from './pages/market/PaymentComplete'
 import AnalysisLab from './pages/analysis/AnalysisLab'
 import MealAnalysisLab from './pages/analysis/MealAnalysisLab'
+import ExerciseAnalysisLab from './pages/analysis/ExerciseAnalysisLab'
+import BodyCompositionLab from './pages/analysis/BodyCompositionLab'
+import HealthRecordsPage from './pages/my/HealthRecordsPage'
 import { recordMealRoutine, recordRoutineItems } from './api/record'
 import './Router.css'
 
@@ -224,6 +227,10 @@ export default function Router() {
 
         {page === 'meal-analysis' && <MealAnalysisLab onBack={() => setPage('analysis')} />}
 
+        {page === 'exercise-analysis' && <ExerciseAnalysisLab onBack={() => setPage('analysis')} />}
+
+        {page === 'body-analysis' && <BodyCompositionLab onBack={() => setPage('analysis')} />}
+
         {page === 'market' && <MarketPage
           onNavigate={setPage}
           onOpenCart={() => setPage('market-cart')}
@@ -254,6 +261,8 @@ export default function Router() {
         {page === 'payment-complete' && <PaymentComplete onBack={() => setPage('market')} />}
 
         {page === 'my' && <MyPage initialProfile={profile} onNavigate={setPage} onResetRoutine={() => setPage('goal')} />}
+
+        {page === 'health-records' && <HealthRecordsPage onBack={() => setPage('my')} onAdd={() => setPage('health-data')} />}
 
         {page === 'routine-detail' && (
           <RoutineDetail

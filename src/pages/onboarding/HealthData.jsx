@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { uploadHealthDocument } from '../../api/health'
+import { saveHealthDocumentPreview } from '../../utils/healthDocumentPreview'
 import './HealthData.css'
 
 const INITIAL_DOCUMENTS = [
@@ -73,6 +74,7 @@ export default function HealthData({ onNext, onBack }) {
       const documentIds = responses
         .map((response) => response?.data?.documentId)
         .filter(Boolean)
+      await Promise.all(responses.map((response, index) => saveHealthDocumentPreview(response?.data?.documentId, selectedDocuments[index]?.file).catch(() => {})))
 
       onNext?.({
         documents: selectedDocuments,

@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { getMyProfile } from '../../api/user'
 import { getRoutines } from '../../api/routine'
+import { getHealthDocuments } from '../../api/health'
 import BottomNav from '../../components/layout/BottomNav'
 import smileIcon from '../../assets/icons/smile.png'
 import './MyPage.css'
 
 const MENU_ITEMS = [
-  { icon: '⚕', label: '건강 정보 · 진료 기록', value: '3건' },
+  { id: 'health-records', icon: '⚕', label: '건강 정보 · 진료 기록' },
   { icon: '◇', label: '크레딧 내역', value: '2,400 C' },
   { icon: '▤', label: '주문 · 배송', value: '2건' },
   { icon: '♡', label: '찜한 루틴 · 상품', value: '8' },
@@ -17,13 +18,15 @@ const MENU_ITEMS = [
 export default function MyPage({ initialProfile, onNavigate, onResetRoutine }) {
   const [profile, setProfile] = useState(initialProfile)
   const [routines, setRoutines] = useState([])
+  const [healthDocumentCount, setHealthDocumentCount] = useState(0)
 
   useEffect(() => {
     let active = true
-    Promise.allSettled([getMyProfile(), getRoutines()]).then(([profileResult, routineResult]) => {
+    Promise.allSettled([getMyProfile(), getRoutines(), getHealthDocuments(0, 1)]).then(([profileResult, routineResult, documentResult]) => {
       if (!active) return
       if (profileResult.status === 'fulfilled') setProfile(profileResult.value?.data || initialProfile)
       if (routineResult.status === 'fulfilled') setRoutines(routineResult.value?.data?.content || [])
+      if (documentResult.status === 'fulfilled') setHealthDocumentCount(Number(documentResult.value?.data?.totalElements || 0))
     })
     return () => { active = false }
   }, [initialProfile])
@@ -50,7 +53,7 @@ export default function MyPage({ initialProfile, onNavigate, onResetRoutine }) {
           <div className="my-stat-row"><span><strong>{stats.total}</strong><small>진행 루틴</small></span><span><strong>{stats.completed}</strong><small>완료 운동</small></span><span><strong>72</strong><small>웰니스 지수</small></span><span><strong>14</strong><small>친구</small></span></div>
         </article>
 
-        <div className="my-menu-card">{MENU_ITEMS.map((item) => <button type="button" key={item.label}><i>{item.icon}</i><strong>{item.label}</strong><span>{item.value}</span><b>›</b></button>)}</div>
+        <div className="my-menu-card">{MENU_ITEMS.map((item) => <button type="button" key={item.label} onClick={() => item.id && onNavigate?.(item.id)}><i>{item.icon}</i><strong>{item.label}</strong><span>{item.id === 'health-records' ? `${healthDocumentCount}건` : item.value}</span><b>›</b></button>)}</div>
 
         <button type="button" className="my-ai-history"><i>◎</i><span><strong>AI 채팅 기록</strong><small>연구원과의 대화 · 준비 중</small></span><b>›</b></button>
 

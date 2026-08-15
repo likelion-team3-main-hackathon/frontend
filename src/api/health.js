@@ -26,6 +26,14 @@ export function getLatestHealthAnalysis() {
   return apiRequest('/health-analyses/latest')
 }
 
+export function getHealthAnalyses(page = 0, size = 10) {
+  return apiRequest(`/health-analyses?page=${page}&size=${size}`)
+}
+
+export function getHealthDocuments(page = 0, size = 50) {
+  return apiRequest(`/health-documents?page=${page}&size=${size}`)
+}
+
 function wait(delayMs, signal) {
   return new Promise((resolve, reject) => {
     const timeoutId = window.setTimeout(resolve, delayMs)
