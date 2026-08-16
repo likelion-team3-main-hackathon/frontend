@@ -28,6 +28,46 @@ export async function uploadRoutineRecordImage(file) {
   return response?.data?.imageKey || null
 }
 
+export async function analyzeMealPhoto(file, routineItemId, recordedAt = new Date().toISOString()) {
+  const formData = new FormData()
+  formData.append('image', file)
+  if (Number.isFinite(Number(routineItemId))) formData.append('routineItemId', String(routineItemId))
+  formData.append('recordedAt', recordedAt)
+  const response = await apiRequest('/meal-analyses', { method: 'POST', body: formData })
+  return response?.data
+}
+
+export async function analyzeExercisePose(file, exerciseName, routineItemId) {
+  const formData = new FormData()
+  formData.append('image', file)
+  formData.append('exerciseName', exerciseName)
+  if (Number.isFinite(Number(routineItemId))) formData.append('routineItemId', String(routineItemId))
+  const response = await apiRequest('/pose-analyses', { method: 'POST', body: formData })
+  return response?.data
+}
+
+export function updateMealAnalysis(analysisId, foods) {
+  return apiRequest(`/meal-analyses/${analysisId}`, {
+    method: 'PATCH',
+    body: { foods: foods.map((food) => ({
+      name: food.name,
+      servingGrams: Number(food.servingGrams || food.amount || 100),
+      calories: Number(food.calories || 0),
+      carbohydrateGrams: Number(food.carbohydrateGrams ?? food.carbs ?? 0),
+      proteinGrams: Number(food.proteinGrams ?? food.protein ?? 0),
+      fatGrams: Number(food.fatGrams ?? food.fat ?? 0),
+    })) },
+  })
+}
+
+export function confirmMealAnalysis(analysisId) {
+  return apiRequest(`/meal-analyses/${analysisId}/confirm`, { method: 'POST' })
+}
+
+export function getDailyNutritionReport(date) {
+  return apiRequest(`/nutrition-reports/daily?date=${encodeURIComponent(date)}`)
+}
+
 function recordedAtFor(item) {
   if (!item?.scheduledDate) return new Date().toISOString()
   const now = new Date()
@@ -77,7 +117,11 @@ export async function recordRoutineItems(item, status, activityType = 'EXERCISE'
     : createRoutineRecords(records)
 }
 
-export async function recordMealRoutine(item, foods, mealType, photoFile) {
+export async function recordMealRoutine(item, foods, mealType, photoFile, mealAnalysisId) {
+  if (mealAnalysisId) {
+    await updateMealAnalysis(mealAnalysisId, foods)
+    return confirmMealAnalysis(mealAnalysisId)
+  }
   const totals = foods.reduce((sum, food) => ({
     calories: sum.calories + Number(food.calories || 0),
     carbs: sum.carbs + Number(food.carbs || 0),

@@ -65,6 +65,27 @@
 .learn-posture-button { display: flex; width: 100%; min-height: 45px; align-items: center; justify-content: center; gap: 7px; border: 0; border-radius: 8px; background: #4e8b35; color: #fff; font-size: 11px; font-weight: 700; }
 .learn-posture-button img { width: 16px; height: 16px; object-fit: contain; }
 
+.pose-analysis-page { display:flex; min-height:calc(100dvh - 48px); flex-direction:column; color:#293125; }
+.pose-analysis-page > header { display:grid; min-height:44px; grid-template-columns:30px 1fr 30px; align-items:center; }
+.pose-analysis-page > header button { border:0; background:transparent; font-size:25px; }
+.pose-analysis-page > header h1 { margin:0; font-size:15px; text-align:center; }
+.pose-analysis-loading,.pose-analysis-error { display:flex; min-height:420px; align-items:center; justify-content:center; flex-direction:column; gap:10px; text-align:center; }
+.pose-analysis-loading small { color:#92988e; font-size:10px; }
+.pose-analysis-error button,.pose-retry-button,.pose-return-button { min-height:45px; border:0; border-radius:9px; font-weight:700; }
+.pose-score-card { display:flex; margin-top:12px; padding:22px; align-items:center; flex-direction:column; border-radius:16px; background:#eaf3df; }
+.pose-score-card small { color:#668357; font-size:10px; }
+.pose-score-card strong { margin:7px 0 3px; color:#4e8b35; font-size:38px; }
+.pose-score-card em { font-size:13px; font-style:normal; }
+.pose-score-card span { color:#75836e; font-size:9px; }
+.pose-result-card,.pose-safety-warning { margin-top:10px; padding:15px; border-radius:13px; background:#fff; }
+.pose-result-card h2,.pose-safety-warning strong { margin:0; font-size:12px; }
+.pose-result-card ul { margin:10px 0 0; padding-left:18px; color:#62695e; font-size:10px; line-height:1.7; }
+.pose-result-card p,.pose-safety-warning p { margin:9px 0 0; color:#62695e; font-size:10px; line-height:1.6; }
+.pose-safety-warning { border:1px solid #e3b18d; background:#fff5ec; color:#a24f32; }
+.pose-disclaimer { margin:12px 2px!important; color:#999e96!important; font-size:8px!important; line-height:1.5; }
+.pose-retry-button { margin-top:auto; border:1px solid #b8d0ae; background:#fff; color:#4e8b35; }
+.pose-return-button { margin-top:8px; background:#4e8b35; color:#fff; }
+
 /* 세트 간 휴식 */
 .exercise-rest-page main { display: flex; flex: 1; align-items: center; justify-content: center; flex-direction: column; }
 .exercise-rest-page main > small { color: #91978d; font-size: 11px; }

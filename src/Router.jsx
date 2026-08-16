@@ -75,7 +75,7 @@ export default function Router() {
 
   async function saveRoutineStatus(item, status, mealData, exerciseData) {
     if (mealData && status === 'completed') {
-      await recordMealRoutine(item, mealData.foods, mealData.mealType, mealData.photoFile)
+      await recordMealRoutine(item, mealData.foods, mealData.mealType, mealData.photoFile, mealData.mealAnalysisId)
       const calories = mealData.foods.reduce((total, food) => total + Number(food.calories || 0), 0)
       setRoutineCalories((current) => ({ ...current, [item.id]: calories }))
     } else if (item.routineItemId != null || item.exercises?.length) {

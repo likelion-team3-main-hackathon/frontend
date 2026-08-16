@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { getRoutineRecords } from '../../api/record'
+import { getDailyNutritionReport, getRoutineRecords } from '../../api/record'
 import BottomNav from '../../components/layout/BottomNav'
 import smileIcon from '../../assets/icons/smile_big.png'
 import bellIcon from '../../assets/icons/bell.png'
@@ -45,6 +45,7 @@ function nutrientTotals(records, sessionCalories) {
 export default function TodayReport({ items = [], statuses = {}, calories = {}, exerciseResults = {}, reportDate, onBack, onNavigate }) {
   const [records, setRecords] = useState([])
   const [streakDays, setStreakDays] = useState(0)
+  const [nutritionReport, setNutritionReport] = useState(null)
   const [currentDate] = useState(() => new Date())
   const selectedDate = useMemo(() => reportDate ? new Date(`${reportDate}T00:00:00`) : currentDate, [reportDate, currentDate])
   const selectedDateKey = dateKey(selectedDate)
@@ -57,6 +58,7 @@ export default function TodayReport({ items = [], statuses = {}, calories = {}, 
   useEffect(() => {
     let active = true
     getRoutineRecords(selectedDateKey).then((response) => { if (active) setRecords(response?.data || []) }).catch(() => {})
+    getDailyNutritionReport(selectedDateKey).then((response) => { if (active) setNutritionReport(response?.data || null) }).catch(() => {})
     return () => { active = false }
   }, [selectedDateKey])
 
@@ -123,7 +125,7 @@ export default function TodayReport({ items = [], statuses = {}, calories = {}, 
           <article className="report-small-metric"><span>☾</span><div><small>수면</small><strong>{isToday ? homeMockData.condition.sleep.total : '기록 없음'}</strong></div></article>
         </div>
 
-        <article className="report-coaching"><span>!</span><p><strong>연구원 한마디</strong>단백질이 {Math.max(0, 135 - nutrients.protein)}g 부족했어요. 내일 아침에 계란 2개를 더하면 딱 맞아요.</p></article>
+        <article className="report-coaching"><span>!</span><p><strong>연구원 한마디</strong>{nutritionReport?.comment || `오늘 단백질이 ${Math.max(0, 120 - nutrients.protein)}g 부족했어요.`}</p></article>
         <button type="button" className="prepare-tomorrow-button" onClick={() => onNavigate?.('ai-chat')}>내일 루틴 대비하기</button>
 
         <div className="report-activity-heading"><h2>오늘 할 일 <b>{completed} / {items.length}</b></h2><span>3개 루틴 종합</span></div>
