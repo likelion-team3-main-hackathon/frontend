@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { logout } from '../../api/auth'
 import BottomNav from '../../components/layout/BottomNav'
-import { getHome, getLatestCoaching } from '../../api/home'
+import AiFloatingButton from '../../components/layout/AiFloatingButton'
+import { getLatestCoaching } from '../../api/home'
 import { getRoutineRecords, recordWater } from '../../api/record'
 import { getRoutine, getRoutines } from '../../api/routine'
 import { homeMockData } from '../../mocks/homeData'
@@ -119,6 +119,10 @@ function isMealActivity(item) {
   return ['아침', '점심', '저녁', '끼니', '식단'].some((keyword) => item.type?.includes(keyword))
 }
 
+function mealFirst(items) {
+  return [...items].sort((left, right) => Number(isMealActivity(right)) - Number(isMealActivity(left)))
+}
+
 function statusForItem(item, statuses) {
   if (statuses[item.id]) return statuses[item.id]
   const ids = item.routineItemIds || [item.routineItemId]
@@ -134,17 +138,17 @@ export default function Home({
   onPassRoutine,
   onOpenReport,
   onCreateRoutine,
-  onLoggedOut,
+  onOpenNotifications,
   routineStatuses = {},
   routineCalories = {},
   onStatusesLoaded,
+  onOpenAi,
 }) {
   const statusesLoadedRef = useRef(onStatusesLoaded)
   statusesLoadedRef.current = onStatusesLoaded
   const weekDates = useMemo(getWeekDates, [])
   const todayKey = weekDates.find((date) => date.isToday)?.key || weekDates[0].key
   const [selectedDate, setSelectedDate] = useState(todayKey)
-  const [userName, setUserName] = useState('사용자')
   const [activeRoutines, setActiveRoutines] = useState([])
   const [routineDetails, setRoutineDetails] = useState([])
   const [coaching, setCoaching] = useState(homeMockData.condition.coaching)
@@ -156,13 +160,13 @@ export default function Home({
 
   useEffect(() => {
     let active = true
-    Promise.allSettled([getHome(), getRoutines(), getLatestCoaching()]).then(async ([home, routines, coachingResult]) => {
+    Promise.allSettled([getRoutines(), getLatestCoaching()]).then(async ([routines, coachingResult]) => {
       if (!active) return
-      if (home.status === 'fulfilled') setUserName(home.value?.data?.user?.name || '사용자')
       if (coachingResult.status === 'fulfilled') setCoaching(coachingResult.value?.data?.message || homeMockData.condition.coaching)
       if (routines.status !== 'fulfilled') return
 
-      const list = routines.value?.data?.content || []
+      const hiddenRoutineIds = new Set(JSON.parse(localStorage.getItem('renewHiddenRoutineIds') || '[]').map(String))
+      const list = (routines.value?.data?.content || []).filter((routine) => !hiddenRoutineIds.has(String(routine.id)))
       setIsApiConnected(true)
       setActiveRoutines(list.map(routineSummary))
       if (list.length === 0) {
@@ -227,21 +231,19 @@ export default function Home({
     return () => { active = false }
   }, [selectedDate])
 
-  const apiScheduled = scheduledItems(routineDetails, selectedDate)
-  const displayedRoutines = apiScheduled
+  const allScheduledRoutines = mealFirst(scheduledItems(routineDetails, selectedDate))
+  const selectedRoutineId = activeRoutines[routineSlide]?.id
+  const displayedRoutines = selectedRoutineId == null
+    ? allScheduledRoutines
+    : allScheduledRoutines.filter((item) => String(item.routineId) === String(selectedRoutineId))
   const nextRoutineIndex = displayedRoutines.findIndex((item) => !statusForItem(item, routineStatuses))
-  const completedCount = displayedRoutines.filter((item) => statusForItem(item, routineStatuses) === 'completed').length
-  const allDecided = displayedRoutines.length > 0 && displayedRoutines.every((item) => statusForItem(item, routineStatuses))
+  const totalCompletedCount = allScheduledRoutines.filter((item) => statusForItem(item, routineStatuses) === 'completed').length
+  const allDecided = allScheduledRoutines.length > 0 && allScheduledRoutines.every((item) => statusForItem(item, routineStatuses))
 
   async function changeWater(change) {
     const next = Math.max(0, Math.min(8, water + change))
     setWater(next)
     try { await recordWater(next, selectedDate) } catch { /* API 실패 시 화면 상태만 유지 */ }
-  }
-
-  async function handleLogout() {
-    await logout()
-    onLoggedOut?.()
   }
 
   return (
@@ -250,16 +252,14 @@ export default function Home({
         <header className="home-topbar">
           <strong>리뉴</strong>
           <div className="home-topbar-actions">
-            <button type="button" aria-label="알림"><img src={bellIcon} alt="" /></button>
-            <button type="button" onClick={handleLogout}>로그아웃</button>
+            <button type="button" aria-label="알림" onClick={() => onOpenNotifications?.(mealFirst(scheduledItems(routineDetails, todayKey)), todayKey)}><img src={bellIcon} alt="" /></button>
           </div>
         </header>
-        <p className="home-user-greeting">{userName} 님, 오늘도 가볍게 시작해요</p>
 
         <div className="week-selector" aria-label="이번 주 날짜 선택">
           {weekDates.map((item) => {
             const hasActivity = activeDateKeys.has(item.key)
-              || (item.key === selectedDate && completedCount > 0)
+              || (item.key === selectedDate && totalCompletedCount > 0)
             return <button type="button" key={item.key} className={`${selectedDate === item.key ? 'selected' : ''} ${hasActivity ? 'has-activity' : ''}`} onClick={() => setSelectedDate(item.key)}><small>{item.day}</small><span>{item.date}</span></button>
           })}
         </div>
@@ -289,9 +289,9 @@ export default function Home({
         <section className="today-timeline">
           {allDecided && (
             <article className="today-completion-card">
-              <h2>오늘 {completedCount} / {displayedRoutines.length} 완료</h2>
+              <h2>오늘 {totalCompletedCount} / {allScheduledRoutines.length} 완료</h2>
               <p>오늘의 루틴 진행 결과를 확인해 보세요</p>
-              <button type="button" onClick={() => onOpenReport?.(displayedRoutines, selectedDate)}>오늘의 리포트</button>
+              <button type="button" onClick={() => onOpenReport?.(allScheduledRoutines, selectedDate)}>오늘의 리포트</button>
             </article>
           )}
           {displayedRoutines.length === 0 && <div className="empty-day-card">이 날짜에 예정된 루틴이 없어요.</div>}
@@ -303,9 +303,9 @@ export default function Home({
               ? mealActiveIcon
               : mealActivity ? mealIcon : exerciseIcon
             const compactDetail = mealActivity && status === 'completed'
-              ? `${item.time} · 섭취 ${(routineCalories[item.id] ?? item.calories ?? 0).toLocaleString()} kcal`
-              : `${item.time} · ${item.detail}`
-            return <article className={`today-card ${isPrimary ? 'primary' : ''} ${status || ''}`} key={item.id}><span className="timeline-dot" />{isPrimary ? <><div className="today-meta"><em>● {item.type}</em><span>{item.time}</span><b>›</b></div><h2>{item.title}</h2><p>{item.detail}</p><button type="button" className="routine-start-button" onClick={() => onStartRoutine?.(item)}>시작하기</button><button type="button" className="routine-pass-button" onClick={() => onPassRoutine?.(item)}>패스하기</button></> : <button type="button" className="compact-routine" disabled={Boolean(status)} onClick={() => onStartRoutine?.(item)}><img className="routine-activity-icon" src={activityIcon} alt="" /><div><strong>{item.type} · {item.title}</strong><small>{compactDetail}</small></div>{status === 'completed' && <span className="routine-status-icon completed">✓</span>}</button>}</article>
+              ? `섭취 ${(routineCalories[item.id] ?? item.calories ?? 0).toLocaleString()} kcal`
+              : item.detail
+            return <article className={`today-card ${isPrimary ? 'primary' : ''} ${status || ''}`} key={item.id}><span className="timeline-dot" />{isPrimary ? <><div className="today-meta"><em>● {item.type}</em><b>›</b></div><h2>{item.title}</h2><p>{item.detail}</p><button type="button" className="routine-start-button" onClick={() => onStartRoutine?.(item)}>시작하기</button><button type="button" className="routine-pass-button" onClick={() => onPassRoutine?.(item)}>패스하기</button></> : <button type="button" className="compact-routine" disabled={Boolean(status)} onClick={() => onStartRoutine?.(item)}><img className="routine-activity-icon" src={activityIcon} alt="" /><div><strong>{item.type} · {item.title}</strong><small>{compactDetail}</small></div>{status === 'completed' && <span className="routine-status-icon completed">✓</span>}</button>}</article>
           })}
         </section>
 
@@ -317,6 +317,7 @@ export default function Home({
           <button type="button" className="research-note">{homeMockData.condition.recommendation}<span>›</span></button>
         </section>
       </div>
+      <AiFloatingButton onClick={onOpenAi} />
       <BottomNav active="home" onNavigate={onNavigate} />
     </section>
   )

@@ -130,7 +130,7 @@ export default function TodayReport({ items = [], statuses = {}, calories = {}, 
         <div className="report-activity-list">
           {items.map((item) => {
             const status = statusForItem(item, statuses)
-            return <article className={status || ''} key={item.id}><i /><div><strong>{item.type} · {item.title}</strong><small>{item.time} · {item.activityType === 'MEAL' && status === 'completed' ? `섭취 ${(calories[item.id] || 0).toLocaleString()} kcal` : item.detail}</small></div><span>{status === 'completed' ? '✓' : status === 'cancelled' ? '−' : ''}</span></article>
+            return <article className={status || ''} key={item.id}><i /><div><strong>{item.type} · {item.title}</strong><small>{item.activityType === 'MEAL' && status === 'completed' ? `섭취 ${(calories[item.id] || 0).toLocaleString()} kcal` : item.detail}</small></div><span>{status === 'completed' ? '✓' : status === 'cancelled' ? '−' : ''}</span></article>
           })}
         </div>
       </div>

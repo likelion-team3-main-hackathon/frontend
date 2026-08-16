@@ -1,4 +1,5 @@
 import BottomNav from '../../components/layout/BottomNav'
+import AiFloatingButton from '../../components/layout/AiFloatingButton'
 import './PlaceholderPage.css'
 
 const PAGE_COPY = {
@@ -8,7 +9,7 @@ const PAGE_COPY = {
   my: { title: 'MY', description: '내 프로필과 설정 화면을 준비하고 있어요.' },
 }
 
-export default function PlaceholderPage({ page, onNavigate }) {
+export default function PlaceholderPage({ page, onNavigate, onOpenAi }) {
   const copy = PAGE_COPY[page] || PAGE_COPY.analysis
 
   return (
@@ -18,6 +19,7 @@ export default function PlaceholderPage({ page, onNavigate }) {
         <h1>{copy.title}</h1>
         <p>{copy.description}</p>
       </main>
+      {page === 'community' && <AiFloatingButton onClick={onOpenAi} />}
       <BottomNav active={page} onNavigate={onNavigate} />
     </section>
   )

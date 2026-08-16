@@ -1,10 +1,12 @@
 .health-analysis-page {
+  position: relative;
   display: flex;
   min-height: calc(100dvh - 48px);
   flex-direction: column;
   padding: 36px 4px 14px;
   background: #faf8f2;
 }
+.onboarding-analysis-back{position:absolute;z-index:3;top:14px;left:12px;width:32px;height:32px;padding:0;border:0;background:transparent;color:#394035;font-size:27px}
 
 .analysis-mask {
   display: grid;

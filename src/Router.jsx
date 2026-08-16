@@ -11,6 +11,7 @@ import HealthConsent from './pages/onboarding/HealthConsent'
 import HealthData from './pages/onboarding/HealthData'
 import RoutineComplete from './pages/onboarding/RoutineComplete'
 import RoutineSelection from './pages/onboarding/RoutineSelection'
+import RoutineLoading from './pages/onboarding/RoutineLoading'
 import RoutineStopped from './pages/onboarding/RoutineStopped'
 import PlaceholderPage from './pages/placeholder/PlaceholderPage'
 import RoutineSession from './pages/home/RoutineSession'
@@ -28,6 +29,7 @@ import MealAnalysisLab from './pages/analysis/MealAnalysisLab'
 import ExerciseAnalysisLab from './pages/analysis/ExerciseAnalysisLab'
 import BodyCompositionLab from './pages/analysis/BodyCompositionLab'
 import HealthRecordsPage from './pages/my/HealthRecordsPage'
+import NotificationPage from './pages/notifications/NotificationPage'
 import { recordMealRoutine, recordRoutineItems } from './api/record'
 import './Router.css'
 
@@ -50,6 +52,7 @@ export default function Router() {
   const [exerciseResults, setExerciseResults] = useState({})
   const [todayReportItems, setTodayReportItems] = useState([])
   const [reportDate, setReportDate] = useState(null)
+  const [todayReportBackPage, setTodayReportBackPage] = useState('home')
   const [aiChatBackPage, setAiChatBackPage] = useState('home')
   const [selectedMarketProduct, setSelectedMarketProduct] = useState(null)
   const [selectedExpertRoutine, setSelectedExpertRoutine] = useState(null)
@@ -57,11 +60,17 @@ export default function Router() {
   const [checkoutOrder, setCheckoutOrder] = useState(null)
   const [checkoutBackPage, setCheckoutBackPage] = useState('market')
   const [healthDataBackPage, setHealthDataBackPage] = useState('goal')
+  const [isRoutineReset, setIsRoutineReset] = useState(false)
 
   function openCheckout(order, backPage) {
     setCheckoutOrder(order)
     setCheckoutBackPage(backPage)
     setPage('market-checkout')
+  }
+
+  function openAiChat(backPage) {
+    setAiChatBackPage(backPage)
+    setPage('ai-chat')
   }
 
   async function saveRoutineStatus(item, status, mealData, exerciseData) {
@@ -116,9 +125,12 @@ export default function Router() {
         {page === 'health-data' && (
           <HealthData
             onBack={() => setPage(healthDataBackPage)}
+            allowSkip={isRoutineReset}
+            onBack={() => setPage('goal')}
             onNext={(data) => {
               if (!data) {
-                setPage('home')
+                setHealthDocuments({ documents: [], documentIds: [], useExisting: true })
+                setPage('health-analysis')
                 return
               }
               setHealthDocuments(data)
@@ -145,16 +157,32 @@ export default function Router() {
         {page === 'analysis-result' && (
           <AnalysisResult
             analysis={analysis}
-            onConfirm={() => setPage('routine-selection')}
-            onLater={() => setPage('routine-stopped')}
+            onBack={() => setPage('health-analysis')}
+            onConfirm={() => setPage('routine-recommendation-loading')}
+            onLater={() => {
+              setIsRoutineReset(false)
+              setPage('home')
+            }}
           />
+        )}
+
+        {page === 'routine-recommendation-loading' && (
+          <RoutineLoading onDone={() => setPage('routine-selection')} />
         )}
 
         {page === 'routine-selection' && (
           <RoutineSelection
             analysis={analysis}
-            onComplete={(result) => {
+            isReset={isRoutineReset}
+            onBack={() => setPage('analysis-result')}
+            onCancel={() => {
+              setIsRoutineReset(false)
+              setPage('home')
+            }}
+            onComplete={(result, resetMode) => {
               setRoutine(result)
+              if (resetMode) sessionStorage.setItem('lastRoutineResetMode', resetMode)
+              setIsRoutineReset(false)
               setPage('routine-complete')
             }}
           />
@@ -171,9 +199,10 @@ export default function Router() {
         {page === 'home' && (
           <Home
             onCreateRoutine={() => setPage('health-data')}
-            onLoggedOut={() => {
-              setProfile(null)
-              setPage('login')
+            onOpenNotifications={(items, selectedDate) => {
+              setTodayReportItems(items)
+              setReportDate(selectedDate)
+              setPage('notifications')
             }}
             onNavigate={setPage}
             routineStatuses={routineStatuses}
@@ -182,10 +211,12 @@ export default function Router() {
               setRoutineStatuses((current) => ({ ...current, ...statuses }))
               setRoutineCalories((current) => ({ ...current, ...calories }))
             }}
+            onOpenAi={() => openAiChat('home')}
             onPassRoutine={(item) => saveRoutineStatus(item, 'cancelled')}
             onOpenReport={(items, selectedDate) => {
               setTodayReportItems(items)
               setReportDate(selectedDate)
+              setTodayReportBackPage('home')
               setPage('today-report')
             }}
             onStartRoutine={(item) => {
@@ -206,7 +237,7 @@ export default function Router() {
             calories={routineCalories}
             exerciseResults={exerciseResults}
             reportDate={reportDate}
-            onBack={() => setPage('home')}
+            onBack={() => setPage(todayReportBackPage)}
             onNavigate={(nextPage) => {
               if (nextPage === 'ai-chat') setAiChatBackPage('today-report')
               setPage(nextPage)
@@ -215,6 +246,20 @@ export default function Router() {
         )}
 
         {page === 'ai-chat' && <AiRoutineChat onBack={() => setPage(aiChatBackPage)} />}
+
+        {page === 'notifications' && (
+          <NotificationPage
+            items={todayReportItems}
+            statuses={routineStatuses}
+            reportDate={reportDate}
+            onBack={() => setPage('home')}
+            onNavigate={setPage}
+            onOpenFeedback={() => {
+              setTodayReportBackPage('notifications')
+              setPage('today-report')
+            }}
+          />
+        )}
 
         {page === 'routine-session' && (
           <RoutineSession
@@ -225,7 +270,7 @@ export default function Router() {
         )}
 
         {page === 'community' && (
-          <PlaceholderPage page={page} onNavigate={setPage} />
+          <PlaceholderPage page={page} onNavigate={setPage} onOpenAi={() => openAiChat('community')} />
         )}
 
         {page === 'analysis' && <AnalysisLab onNavigate={(nextPage) => {
@@ -245,6 +290,7 @@ export default function Router() {
         {page === 'market' && <MarketPage
           onNavigate={setPage}
           onOpenCart={() => setPage('market-cart')}
+          onOpenAi={() => openAiChat('market')}
           initialTab={marketTab}
           onTabChange={setMarketTab}
           onOpenProduct={(product) => {
@@ -271,7 +317,13 @@ export default function Router() {
 
         {page === 'payment-complete' && <PaymentComplete onBack={() => setPage('market')} />}
 
-        {page === 'my' && <MyPage initialProfile={profile} onNavigate={setPage} onResetRoutine={() => setPage('goal')} />}
+        {page === 'my' && <MyPage initialProfile={profile} onNavigate={setPage} onResetRoutine={() => {
+          setIsRoutineReset(true)
+          setPage('goal')
+        }} onLoggedOut={() => {
+          setProfile(null)
+          setPage('login')
+        }} />}
 
         {page === 'health-records' && <HealthRecordsPage onBack={() => setPage('my')} onAdd={() => {
           setHealthDataBackPage('health-records')
@@ -291,6 +343,7 @@ export default function Router() {
 
         {page === 'routine-stopped' && (
           <RoutineStopped
+            onBack={() => setPage('analysis-result')}
             onGoHome={() => setPage('home')}
             onRetry={() => setPage('analysis-result')}
           />
