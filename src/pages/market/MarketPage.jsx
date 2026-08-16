@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { getExpertContents, getMealProductRecommendations } from '../../api/market'
 import { getRoutines } from '../../api/routine'
 import BottomNav from '../../components/layout/BottomNav'
+import AiFloatingButton from '../../components/layout/AiFloatingButton'
 import './MarketPage.css'
 
 const CATEGORIES = [
@@ -83,7 +84,7 @@ function normalizeExpertContent(content, index) {
   }
 }
 
-export default function MarketPage({ onNavigate, onOpenProduct, onOpenExpert, onOpenCart, initialTab = 'meal', onTabChange }) {
+export default function MarketPage({ onNavigate, onOpenProduct, onOpenExpert, onOpenCart, onOpenAi, initialTab = 'meal', onTabChange }) {
   const [tab, setTab] = useState(initialTab)
   const [query, setQuery] = useState('')
   const [recommended, setRecommended] = useState([])
@@ -190,6 +191,7 @@ export default function MarketPage({ onNavigate, onOpenProduct, onOpenExpert, on
           </section>)}
         </>}
       </div>
+      <AiFloatingButton onClick={onOpenAi} />
       <BottomNav active="market" onNavigate={onNavigate} />
     </section>
   )

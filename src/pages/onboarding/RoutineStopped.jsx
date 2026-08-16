@@ -1,9 +1,10 @@
 import routineStoppedIcon from '../../assets/icons/sad.png'
 import './RoutineStopped.css'
 
-export default function RoutineStopped({ onGoHome, onRetry }) {
+export default function RoutineStopped({ onGoHome, onRetry, onBack }) {
   return (
     <section className="routine-stopped-page">
+      <button type="button" className="routine-stopped-back" onClick={onBack} aria-label="직전 페이지로 돌아가기">‹</button>
       <div className="routine-stopped-background">
         <h1>
           루틴을 준비하고

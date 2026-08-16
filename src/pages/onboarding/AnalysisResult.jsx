@@ -1,7 +1,7 @@
 import './AnalysisResult.css'
 import smile from "../../assets/icons/smile_big.png"
 
-export default function AnalysisResult({ analysis, onConfirm, onLater }) {
+export default function AnalysisResult({ analysis, onConfirm, onLater, onBack }) {
   const goal = analysis?.goals?.[0]?.description || analysis?.summary
   const firstPrecaution = analysis?.precautions?.[0]
   const precaution = typeof firstPrecaution === 'string' ? firstPrecaution : firstPrecaution?.description
@@ -20,6 +20,7 @@ export default function AnalysisResult({ analysis, onConfirm, onLater }) {
 
   return (
     <section className="analysis-result-page">
+      <button type="button" className="onboarding-page-back" onClick={onBack} aria-label="직전 페이지로 돌아가기">‹</button>
       <div className="routine-preparing-background">
         <h1>
           루틴을 준비하고

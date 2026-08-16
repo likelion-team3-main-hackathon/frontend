@@ -1,9 +1,11 @@
 import { useMemo, useRef, useState } from 'react'
 import {
   getRoutine,
+  getRoutines,
   requestRoutineGeneration,
   waitForRoutineGeneration,
 } from '../../api/routine'
+import RoutineLoading from './RoutineLoading'
 import './RoutineSelection.css'
 
 const FALLBACK_RECOMMENDATIONS = [
@@ -19,12 +21,29 @@ function today() {
   return new Date(date.getTime() - offset).toISOString().slice(0, 10)
 }
 
-export default function RoutineSelection({ analysis, onComplete }) {
+function routineActivityKinds(routine) {
+  const activities = (routine?.days || []).flatMap((day) => (day.sections || []))
+    .flatMap((section) => section.exercises || [])
+    .map((item) => item.activityType)
+  return {
+    hasMeal: activities.includes('MEAL'),
+    hasExercise: activities.some((type) => type !== 'MEAL'),
+  }
+}
+
+function isMealRecommendation(routine) {
+  return routine?.category === 'MEAL'
+    || routine?.type === 'MEAL'
+    || Number(routine?.mealCountPerDay || 0) > 0
+}
+
+export default function RoutineSelection({ analysis, onComplete, onBack, onCancel, isReset = false }) {
   const abortControllerRef = useRef(null)
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [status, setStatus] = useState('')
   const [error, setError] = useState('')
+  const [resetPrompt, setResetPrompt] = useState(null)
   const hasAiRecommendations = Boolean(analysis?.routineRecommendations?.length)
   const recommendations = useMemo(
     () => analysis?.routineRecommendations?.length ? analysis.routineRecommendations : FALLBACK_RECOMMENDATIONS,
@@ -46,12 +65,22 @@ export default function RoutineSelection({ analysis, onComplete }) {
     setError('')
   }
 
-  async function generateRoutine() {
+  function confirmSelection() {
     const selected = recommendations.filter((item) => selectedIds.has(item.id))
     if (selected.length === 0) {
       setError('식단 또는 운동 루틴을 하나 이상 선택해 주세요.')
       return
     }
+    if (isReset) {
+      setResetPrompt(selected.some(isMealRecommendation) ? 'meal-change' : 'choose-mode')
+      return
+    }
+    generateRoutine('initial')
+  }
+
+  async function generateRoutine(resetMode) {
+    const selected = recommendations.filter((item) => selectedIds.has(item.id))
+    setResetPrompt(null)
     const meal = selected.find((item) => item.category === 'MEAL')
     const exercise = selected.find((item) => item.category === 'EXERCISE')
     const controller = new AbortController()
@@ -62,6 +91,23 @@ export default function RoutineSelection({ analysis, onComplete }) {
     setError('')
 
     try {
+      let replacedRoutineIds = []
+      let preservedRoutineIds = []
+      if (isReset && resetMode === 'replace') {
+        const currentRoutines = await getRoutines()
+        const currentList = currentRoutines?.data?.content || []
+        const detailResults = await Promise.allSettled(currentList.map((item) => getRoutine(item.id)))
+        detailResults.forEach((result, index) => {
+          const id = currentList[index]?.id
+          if (!id || result.status !== 'fulfilled') return
+          const kinds = routineActivityKinds(result.value?.data)
+          const shouldReplace = meal
+            ? kinds.hasMeal
+            : kinds.hasExercise && !kinds.hasMeal
+          if (shouldReplace) replacedRoutineIds.push(id)
+          else preservedRoutineIds.push(id)
+        })
+      }
       const response = await requestRoutineGeneration({
         analysisId: analysis?.id,
         startDate: today(),
@@ -80,7 +126,15 @@ export default function RoutineSelection({ analysis, onComplete }) {
       if (!generation.routineId) throw new Error('생성된 루틴 ID를 받지 못했습니다.')
 
       const routineResponse = await getRoutine(generation.routineId)
-      onComplete?.(routineResponse?.data)
+      if (replacedRoutineIds.length) {
+        const hiddenIds = new Set(JSON.parse(localStorage.getItem('renewHiddenRoutineIds') || '[]').map(String))
+        preservedRoutineIds.forEach((id) => hiddenIds.delete(String(id)))
+        replacedRoutineIds.forEach((id) => {
+          if (String(id) !== String(generation.routineId)) hiddenIds.add(String(id))
+        })
+        localStorage.setItem('renewHiddenRoutineIds', JSON.stringify([...hiddenIds]))
+      }
+      onComplete?.(routineResponse?.data, resetMode)
     } catch (requestError) {
       if (requestError?.name !== 'AbortError') {
         setError(requestError instanceof Error ? requestError.message : '루틴을 생성하지 못했습니다.')
@@ -91,9 +145,12 @@ export default function RoutineSelection({ analysis, onComplete }) {
     }
   }
 
+  if (isSubmitting) return <RoutineLoading message={'선택한 루틴으로\n일정을 구성하고 있어요'} />
+
   return (
     <section className="routine-selection-page">
       <div className="routine-selection-content">
+        <button type="button" className="routine-selection-back" onClick={onBack} aria-label="직전 페이지로 돌아가기">‹</button>
         <h1>추천 루틴</h1>
         <p className="routine-selection-intro">식단과 운동을 각각 하나씩 고르거나, 필요한 유형만 선택할 수 있어요</p>
 
@@ -137,10 +194,27 @@ export default function RoutineSelection({ analysis, onComplete }) {
 
       <footer className="routine-selection-actions">
         <small>{selectedIds.size ? `${selectedIds.size}개 선택됨` : '추천 루틴을 선택해 주세요'}</small>
-        <button type="button" disabled={isSubmitting || !analysis?.id || selectedIds.size === 0} onClick={generateRoutine}>
-          {isSubmitting ? '생성 중…' : '선택한 루틴 생성하기'}
+        <button type="button" disabled={isSubmitting || !analysis?.id || selectedIds.size === 0} onClick={confirmSelection}>
+          이대로 할게요
         </button>
+        <button type="button" className="routine-selection-cancel" onClick={onCancel}>취소</button>
       </footer>
+
+      {resetPrompt && (
+        <div className="routine-reset-modal-backdrop" role="presentation" onClick={() => setResetPrompt(null)}>
+          <section className="routine-reset-modal" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
+            <h2>{resetPrompt === 'meal-change' ? '식단 루틴은 변경만 가능해요' : '루틴을 어떻게 적용할까요?'}</h2>
+            <p>{resetPrompt === 'meal-change'
+              ? '해당 루틴은 식단이 겹쳐 다른 루틴들과 합쳐질 수 없습니다. 해당 루틴으로 변경하시겠습니까?'
+              : '현재 루틴에 새 루틴을 추가하거나, 기존 루틴을 선택한 루틴으로 변경할 수 있어요.'}</p>
+            <div>
+              {resetPrompt === 'choose-mode' && <button type="button" onClick={() => generateRoutine('add')}>추가</button>}
+              <button type="button" className="primary" onClick={() => generateRoutine('replace')}>변경</button>
+              {resetPrompt === 'meal-change' && <button type="button" onClick={() => setResetPrompt(null)}>취소</button>}
+            </div>
+          </section>
+        </div>
+      )}
     </section>
   )
 }

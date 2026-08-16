@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { createHealthAnalysis, waitForHealthAnalysis } from '../../api/health'
+import { createHealthAnalysis, getHealthDocuments, waitForHealthAnalysis } from '../../api/health'
 import './HealthAnalysis.css'
 
 const analysisCreationRequests = new Map()
@@ -52,21 +52,31 @@ export default function HealthAnalysis({ healthDocuments, onNext, onBack }) {
   const [status, setStatus] = useState('분석 요청 중…')
   const [error, setError] = useState('')
   const selectedCount = healthDocuments?.documents?.length || 0
+  const [sourceCount, setSourceCount] = useState(selectedCount)
 
   useEffect(() => {
     const documentIds = healthDocuments?.documentIds || []
     const controller = new AbortController()
 
-    if (documentIds.length === 0) {
+    if (documentIds.length === 0 && !healthDocuments?.useExisting) {
       setError('분석할 건강 문서가 없습니다.')
       return () => controller.abort()
     }
 
     async function analyze() {
       try {
+        let analysisDocumentIds = documentIds
+        if (healthDocuments?.useExisting) {
+          setStatus('기존 건강 정보를 불러오고 있어요…')
+          const documentsResponse = await getHealthDocuments(0, 100)
+          analysisDocumentIds = (documentsResponse?.data?.content || []).map((document) => document.documentId).filter(Boolean)
+          if (!analysisDocumentIds.length) throw new Error('저장된 건강 자료를 찾지 못했습니다.')
+          setSourceCount(analysisDocumentIds.length)
+          setStatus('변경한 목표와 기존 건강 정보를 다시 분석하고 있어요…')
+        }
         const response = await createHealthAnalysisOnce(
-          documentIds,
-          healthDocuments.analysisRequestKey,
+          analysisDocumentIds,
+          healthDocuments.analysisRequestKey || crypto.randomUUID(),
         )
         const analysisId = response?.data?.analysisId
 
@@ -97,10 +107,11 @@ export default function HealthAnalysis({ healthDocuments, onNext, onBack }) {
 
   return (
     <section className="health-analysis-page">
+      <button type="button" className="onboarding-analysis-back" onClick={onBack} aria-label="직전 페이지로 돌아가기">‹</button>
       <div className="analysis-mask">마스코트 · {status}</div>
-      <h1>{analysis ? `${analysis.documentFindings?.length || selectedCount}개 문서를 종합했어요` : '건강 정보를 확인하고 있어요'}</h1>
+      <h1>{analysis ? `${analysis.documentFindings?.length || sourceCount}개 문서와 목표를 종합했어요` : '건강 정보를 확인하고 있어요'}</h1>
       <p className="analysis-source-count">
-        선택한 건강 정보 {selectedCount}개를 분석합니다
+        {healthDocuments?.useExisting ? `변경한 목표와 기존 건강 정보 ${sourceCount}개를 다시 분석합니다` : `선택한 건강 정보 ${sourceCount}개를 분석합니다`}
         {analysis?.id ? ` · 분석 #${analysis.id}` : ''}
       </p>
 

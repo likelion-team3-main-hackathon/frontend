@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { getMyProfile } from '../../api/user'
 import { getRoutines } from '../../api/routine'
 import { getHealthDocuments } from '../../api/health'
+import { logout } from '../../api/auth'
 import BottomNav from '../../components/layout/BottomNav'
 import smileIcon from '../../assets/icons/smile.png'
 import './MyPage.css'
@@ -15,7 +16,7 @@ const MENU_ITEMS = [
   { icon: '⊙', label: '알림 설정', value: '' },
 ]
 
-export default function MyPage({ initialProfile, onNavigate, onResetRoutine }) {
+export default function MyPage({ initialProfile, onNavigate, onResetRoutine, onLoggedOut }) {
   const [profile, setProfile] = useState(initialProfile)
   const [routines, setRoutines] = useState([])
   const [healthDocumentCount, setHealthDocumentCount] = useState(0)
@@ -38,6 +39,11 @@ export default function MyPage({ initialProfile, onNavigate, onResetRoutine }) {
   }), [routines])
   const handle = profile?.email ? `@${profile.email.split('@')[0]}` : '@renew_user'
 
+  async function handleLogout() {
+    await logout()
+    onLoggedOut?.()
+  }
+
   return (
     <section className="my-page">
       <div className="my-page-scroll">
@@ -58,6 +64,7 @@ export default function MyPage({ initialProfile, onNavigate, onResetRoutine }) {
         <button type="button" className="my-ai-history"><i>◎</i><span><strong>AI 채팅 기록</strong><small>연구원과의 대화 · 준비 중</small></span><b>›</b></button>
 
         <button type="button" className="routine-reset-card" onClick={onResetRoutine}><i>↻</i><span><strong>루틴 재설정</strong><small>목표와 건강 정보를 다시 설정해요</small></span><b>›</b></button>
+        <button type="button" className="my-logout-card" onClick={handleLogout}><i>↪</i><span><strong>로그아웃</strong><small>현재 계정에서 로그아웃해요</small></span><b>›</b></button>
       </div>
       <BottomNav active="my" onNavigate={onNavigate} />
     </section>

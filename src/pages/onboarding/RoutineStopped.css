@@ -1,4 +1,5 @@
 .routine-stopped-page {
+  position: relative;
   display: flex;
   min-height: calc(100dvh - 48px);
   flex-direction: column;
@@ -74,3 +75,4 @@
   font-size: 15px;
   font-family: Pretendard;
 }
+.routine-stopped-back{position:absolute;z-index:5;top:16px;left:14px;width:32px;height:32px;padding:0;border:0;background:transparent;color:#394035;font-size:27px}
