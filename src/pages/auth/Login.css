@@ -48,6 +48,14 @@
   opacity: 0.68;
 }
 
+.demo-login-list { display: grid; gap: 8px; margin-top: 4px; }
+.demo-login-list > small { color: #65705e; font-size: 12px; font-weight: 700; }
+.demo-login-button { display: flex; width: 100%; min-height: 52px; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; border: 1px solid #78a965; border-radius: 10px; background: #f4faef; color: #47753a; text-align: left; }
+.demo-login-button strong { font-size: 13px; }
+.demo-login-button span { color: #65705e; font-size: 11px; font-weight: 500; }
+.demo-login-button--growth { border-color: #65a97a; background: #eff9f1; }
+.demo-login-button--decline { border-color: #c79572; background: #fff7f0; color: #8b5b3b; }
+
 .login-status,
 .login-message { margin: 0; color: #bd4d43; font-size: 12px; text-align: center; }
 .login-status { color: #65705e; }

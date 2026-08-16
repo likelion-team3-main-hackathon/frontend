@@ -89,6 +89,24 @@ line-height: 22.5px;
   cursor: wait;
 }
 
+.analysis-return-lab-button {
+  width: 100%;
+  min-height: 38px;
+  margin-top: 8px;
+  border: 1px solid #92aa87;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #4e8b35;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.analysis-return-lab-button:disabled {
+  border-color: #c8d2c3;
+  color: #9aa596;
+  cursor: wait;
+}
+
 .analysis-error {
   margin: 14px 0;
   color: #bd4d43;

@@ -59,6 +59,7 @@ export default function Router() {
   const [marketTab, setMarketTab] = useState('meal')
   const [checkoutOrder, setCheckoutOrder] = useState(null)
   const [checkoutBackPage, setCheckoutBackPage] = useState('market')
+  const [healthDataBackPage, setHealthDataBackPage] = useState('goal')
   const [isRoutineReset, setIsRoutineReset] = useState(false)
 
   function openCheckout(order, backPage) {
@@ -116,10 +117,14 @@ export default function Router() {
           />
         )}
 
-        {page === 'goal' && <Goal onNext={() => setPage('health-data')} />}
+        {page === 'goal' && <Goal onNext={() => {
+          setHealthDataBackPage('goal')
+          setPage('health-data')
+        }} />}
 
         {page === 'health-data' && (
           <HealthData
+            onBack={() => setPage(healthDataBackPage)}
             allowSkip={isRoutineReset}
             onBack={() => setPage('goal')}
             onNext={(data) => {
@@ -138,6 +143,10 @@ export default function Router() {
           <HealthAnalysis
             healthDocuments={healthDocuments}
             onBack={() => setPage('health-data')}
+            onReturnToLab={healthDataBackPage === 'body-analysis' ? () => {
+              setHealthDataBackPage('goal')
+              setPage('body-analysis')
+            } : undefined}
             onNext={(result) => {
               setAnalysis(result)
               setPage('analysis-result')
@@ -273,7 +282,10 @@ export default function Router() {
 
         {page === 'exercise-analysis' && <ExerciseAnalysisLab onBack={() => setPage('analysis')} />}
 
-        {page === 'body-analysis' && <BodyCompositionLab onBack={() => setPage('analysis')} />}
+        {page === 'body-analysis' && <BodyCompositionLab onBack={() => setPage('analysis')} onUpload={() => {
+          setHealthDataBackPage('body-analysis')
+          setPage('health-data')
+        }} />}
 
         {page === 'market' && <MarketPage
           onNavigate={setPage}
@@ -313,7 +325,10 @@ export default function Router() {
           setPage('login')
         }} />}
 
-        {page === 'health-records' && <HealthRecordsPage onBack={() => setPage('my')} onAdd={() => setPage('health-data')} />}
+        {page === 'health-records' && <HealthRecordsPage onBack={() => setPage('my')} onAdd={() => {
+          setHealthDataBackPage('health-records')
+          setPage('health-data')
+        }} />}
 
         {page === 'routine-detail' && (
           <RoutineDetail

@@ -1,71 +1,74 @@
 import { useEffect, useMemo, useState } from 'react'
-import { getHealthAnalyses, getHealthDocuments, getLatestHealthAnalysis } from '../../api/health'
-import { buildBodyCompositionHistory } from '../../utils/analysisMetrics'
+import { getBodyCompositionAnalysis } from '../../api/analysis'
 import './BodyCompositionLab.css'
 
-function findingsOf(analysis) { return Array.isArray(analysis?.bodyCompositionFindings) ? analysis.bodyCompositionFindings : [] }
-function matchFinding(findings, patterns) { return findings.find((finding) => patterns.some((pattern) => pattern.test(String(finding.label || '')))) }
-function metric(findings, patterns, fallback) { const found = matchFinding(findings, patterns); return found ? { ...fallback, ...found, value: Number(found.value) } : fallback }
-function shortDate(value, fallback) { const date = value ? new Date(value) : null; return date && !Number.isNaN(date.getTime()) ? `${date.getMonth() + 1}/${date.getDate()}` : fallback }
-function signedChange(current, previous) { if (!Number.isFinite(current) || !Number.isFinite(previous)) return null; const value = current - previous; return Math.abs(value) < .05 ? '유지' : `${value > 0 ? '+' : '−'}${Math.abs(value).toFixed(1)}` }
-function graphLine(points, key) {
-  const available = points.filter((point) => Number.isFinite(point[key]))
-  if (!available.length) return ''
-  const values = available.map((point) => point[key]); const min = Math.min(...values) - .5; const max = Math.max(...values) + .5
-  return points.map((point, index) => Number.isFinite(point[key]) ? `${8 + index * (84 / Math.max(1, points.length - 1))},${72 - (point[key] - min) / Math.max(1, max - min) * 55}` : null).filter(Boolean).join(' ')
+function dateKey(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 }
 
-export default function BodyCompositionLab({ onBack }) {
-  const [latest, setLatest] = useState(null)
-  const [history, setHistory] = useState([])
-  const [documents, setDocuments] = useState([])
+function shortDate(value) {
+  const date = new Date(`${value}T00:00:00`)
+  return `${date.getMonth() + 1}/${date.getDate()}`
+}
+
+function graphLine(points, dates) {
+  if (!points.length) return ''
+  const values = points.map((point) => Number(point.value))
+  const min = Math.min(...values) - .5
+  const max = Math.max(...values) + .5
+  return points.map((point) => {
+    const dateIndex = Math.max(0, dates.indexOf(point.date))
+    const x = 8 + dateIndex * (84 / Math.max(1, dates.length - 1))
+    const y = 72 - (Number(point.value) - min) / Math.max(1, max - min) * 55
+    return `${x},${y}`
+  }).join(' ')
+}
+
+function change(points) {
+  if (points.length < 2) return points.length ? '첫 기록' : '–'
+  const value = Number(points.at(-1).value) - Number(points.at(-2).value)
+  return Math.abs(value) < .05 ? '유지' : `${value > 0 ? '+' : '−'}${Math.abs(value).toFixed(1)}`
+}
+
+export default function BodyCompositionLab({ onBack, onUpload }) {
+  const [report, setReport] = useState(null)
+  const [error, setError] = useState('')
+  const range = useMemo(() => {
+    const today = new Date()
+    const from = new Date(today.getFullYear(), 0, 1)
+    const to = new Date(today.getFullYear(), 11, 31)
+    return { from: dateKey(from), to: dateKey(to) }
+  }, [])
 
   useEffect(() => {
     let active = true
-    Promise.allSettled([getLatestHealthAnalysis(), getHealthAnalyses(0, 10), getHealthDocuments(0, 50)]).then(([latestResult, historyResult, documentsResult]) => {
-      if (!active) return
-      if (latestResult.status === 'fulfilled') setLatest(latestResult.value?.data || null)
-      if (historyResult.status === 'fulfilled') setHistory(historyResult.value?.data?.content || [])
-      if (documentsResult.status === 'fulfilled') setDocuments(documentsResult.value?.data?.content || [])
-    })
+    getBodyCompositionAnalysis(range.from, range.to)
+      .then((response) => { if (active) setReport(response?.data || null) })
+      .catch((requestError) => { if (active) setError(requestError.message) })
     return () => { active = false }
-  }, [])
+  }, [range])
 
-  const historyPoints = useMemo(() => {
-    const analyses = [...history]
-    if (latest?.id && !analyses.some((analysis) => analysis.id === latest.id)) analyses.push(latest)
-    return buildBodyCompositionHistory(analyses, documents, 3).map((point) => ({ ...point, date: shortDate(point.measuredAt, '측정일 없음') }))
-  }, [documents, history, latest])
-  const currentPoint = historyPoints.at(-1) || {}
-  const previousPoint = historyPoints.at(-2) || {}
-  const findings = findingsOf(currentPoint.analysis)
-  const weight = { ...metric(findings, [/체중|weight/i], { label: '체중', unit: 'kg' }), value: currentPoint.weight, interpretation: signedChange(currentPoint.weight, previousPoint.weight) || (historyPoints.length === 1 ? '첫 기록' : '–') }
-  const bodyFat = { ...metric(findings, [/체지방률|body fat.*%|fat percentage/i], { label: '체지방률', unit: '%' }), value: currentPoint.bodyFat, interpretation: signedChange(currentPoint.bodyFat, previousPoint.bodyFat) || (historyPoints.length === 1 ? '첫 기록' : '–') }
-  const muscle = { ...metric(findings, [/골격근량|근육량|skeletal muscle/i], { label: '골격근량', unit: 'kg' }), value: currentPoint.muscle, interpretation: signedChange(currentPoint.muscle, previousPoint.muscle) || (historyPoints.length === 1 ? '첫 기록' : '–') }
-  const weightLine = graphLine(historyPoints, 'weight')
-  const fatLine = graphLine(historyPoints, 'bodyFat')
-
-  const segments = useMemo(() => {
-    const definitions = [
-      ['팔', [/팔.*근육|arm.*muscle/i], [/팔.*지방|arm.*fat/i]],
-      ['몸통', [/몸통.*근육|trunk.*muscle/i], [/몸통.*지방|trunk.*fat/i]],
-      ['다리', [/다리.*근육|leg.*muscle/i], [/다리.*지방|leg.*fat/i]],
-      ['체지방', [/골격근량|근육량/i], [/체지방률|body fat/i]],
-    ]
-    return definitions.map(([label, musclePatterns, fatPatterns]) => {
-      const muscleValue = matchFinding(findings, musclePatterns)
-      const fatValue = matchFinding(findings, fatPatterns)
-      return { label, muscle: muscleValue ? Math.min(100, Number(muscleValue.value) * 3) : 0, fat: fatValue ? Math.min(100, Number(fatValue.value) * 3) : 0 }
-    })
-  }, [findings])
-  const interpretations = findings.map((finding) => finding.interpretation).filter(Boolean)
-  const cautionCount = interpretations.filter((text) => /높|초과|주의|부족|낮/i.test(text)).length
-  const score = findings.length ? Math.max(45, Math.min(100, 86 - cautionCount * 7)) : 0
+  const trends = report?.trends || {}
+  const weights = trends.weight || []
+  const fats = trends.bodyFatPercent || []
+  const muscles = trends.skeletalMuscleMass || []
+  const dates = [...new Set([...weights, ...fats].map((point) => point.date))].sort()
+  const weightLine = graphLine(weights, dates)
+  const fatLine = graphLine(fats, dates)
+  const insufficient = report?.status === 'INSUFFICIENT_DATA'
+  const metrics = [
+    ['체중', report?.latest?.weightKg, 'kg', change(weights)],
+    ['체지방률', report?.latest?.bodyFatPercent, '%', change(fats)],
+    ['골격근량', report?.latest?.skeletalMuscleMassKg, 'kg', change(muscles)],
+  ]
 
   return <section className="body-lab-page"><div className="body-lab-scroll">
-    <header><button type="button" onClick={onBack}>‹</button><h1>체성분 검사실</h1><b>{score}/100</b></header><p className="body-lab-subtitle">인바디 사진 · 최근 {historyPoints.length}회 (측정일 기준)</p>
-    <section className="body-trend"><header><h2>체중 · 체지방 추이</h2><span><i />체중　<i />체지방</span></header>{historyPoints.length ? <><svg viewBox="0 0 100 82" preserveAspectRatio="none">{weightLine && <polyline className="weight-line" points={weightLine} />}{fatLine && <polyline className="fat-line" points={fatLine} />}{weightLine.split(' ').filter(Boolean).map((point) => { const [cx, cy] = point.split(','); return <circle className="weight-dot" key={`w-${point}`} cx={cx} cy={cy} r="1.8" /> })}{fatLine.split(' ').filter(Boolean).map((point) => { const [cx, cy] = point.split(','); return <circle className="fat-dot" key={`f-${point}`} cx={cx} cy={cy} r="1.5" /> })}</svg><div className="body-trend-dates">{historyPoints.map((point, index) => <span key={`${point.date}-${index}`}>{point.date}</span>)}</div></> : <p className="body-empty-history">분석이 완료된 인바디 기록이 없습니다.</p>}<div className="body-summary-metrics">{[weight, bodyFat, muscle].map((item) => <article key={item.label}><small>{item.label}</small><strong>{Number.isFinite(item.value) ? item.value : '–'}<em>{Number.isFinite(item.value) ? item.unit : ''}</em></strong><b className={String(item.interpretation).startsWith('+') ? 'increase' : ''}>{item.interpretation || '–'}</b></article>)}</div></section>
-    <section className="segment-comparison"><h2>부위별 근육 · 지방 (좌우 비교)</h2>{segments.map((segment) => <article key={segment.label}><div><i style={{ width: `${segment.muscle}%` }} /></div><strong>{segment.label}</strong><div><i style={{ width: `${segment.fat}%` }} /></div></article>)}<footer><span>왼쪽</span><span>오른쪽</span></footer></section>
-    <section className="body-lab-analysis"><h2>분석</h2><p>{currentPoint.analysis?.summary || (historyPoints.length ? `${muscle.label} ${muscle.value ?? '–'}${muscle.unit}, ${bodyFat.label} ${bodyFat.value ?? '–'}${bodyFat.unit}로 분석됐어요.` : '업로드된 인바디 사진의 분석이 완료되면 최근 3회 변화가 표시됩니다.')}</p><button type="button">AAC 인바디 재측정 예약하기</button></section>
+    <header><button type="button" onClick={onBack}>‹</button><h1>체성분 검사실</h1><b>{report?.score ?? '–'}/100</b></header><p className="body-lab-subtitle">인바디 등 체성분 문서에서 추출한 측정값 기준</p>
+    {insufficient ? <section className="body-data-required"><h2>체성분 자료가 필요해요</h2><p>{report.message}</p><p>인바디 사진이나 체성분 검사 파일을 올리면 체중·체지방률·골격근량과 좌우 부위별 측정값을 분석합니다.</p><button type="button" onClick={onUpload}>{report.action?.label || '인바디 파일 등록하기'}</button></section> : <>
+      <section className="body-trend"><header><h2>체중 · 체지방 추이</h2><span><i />체중　<i />체지방</span></header>{dates.length ? <><svg viewBox="0 0 100 82" preserveAspectRatio="none">{weightLine && <polyline className="weight-line" points={weightLine} />}{fatLine && <polyline className="fat-line" points={fatLine} />}</svg><div className="body-trend-dates">{dates.map((date) => <span key={date}>{shortDate(date)}</span>)}</div></> : <p className="body-empty-history">추이로 표시할 측정값이 부족합니다.</p>}<div className="body-summary-metrics">{metrics.map(([label, value, unit, interpretation]) => <article key={label}><small>{label}</small><strong>{value ?? '–'}<em>{value != null ? unit : ''}</em></strong><b className={String(interpretation).startsWith('+') ? 'increase' : ''}>{interpretation}</b></article>)}</div></section>
+      <section className="segment-comparison"><h2>부위별 근육 · 지방 (좌우 비교)</h2>{(report?.segmentalComparison || []).length ? report.segmentalComparison.map((segment) => { const muscleMax = Math.max(Number(segment.leftMuscleKg || 0), Number(segment.rightMuscleKg || 0), 1); return <article key={segment.bodyPart}><div><i style={{ width: `${Number(segment.leftMuscleKg || 0) / muscleMax * 100}%` }} /></div><strong>{segment.bodyPart}</strong><div><i style={{ width: `${Number(segment.rightMuscleKg || 0) / muscleMax * 100}%` }} /></div><small>근육 {segment.leftMuscleKg ?? '–'} / {segment.rightMuscleKg ?? '–'}kg<br />지방 {segment.leftFatKg ?? '–'} / {segment.rightFatKg ?? '–'}kg</small></article> }) : <p>부위별 좌우 측정값이 포함된 자료가 없습니다.</p>}<footer><span>왼쪽</span><span>오른쪽</span></footer></section>
+      <section className="body-lab-analysis"><h2>분석</h2><p>{report?.status === 'PARTIAL' ? '측정 기록이 1회라 현재 수치만 표시합니다. 다음 측정부터 변화 추이를 확인할 수 있어요.' : '저장된 체성분 측정 이력을 날짜순으로 비교한 결과입니다.'}</p><button type="button" onClick={onUpload}>체성분 자료 추가하기</button></section>
+    </>}
+    {error && <section className="body-data-required"><p>{error}</p></section>}
   </div></section>
 }

@@ -4,7 +4,7 @@ import { loadHealthDocumentPreviews } from '../../utils/healthDocumentPreview'
 import './HealthRecordsPage.css'
 
 const TYPE_META = {
-  INBODY: { label: '인바디 (AAC)', description: '체성분 검사 기록' },
+  INBODY: { label: '인바디 (MCC)', description: '체성분 검사 기록' },
   MEDICAL_RECORD: { label: '진료기록', description: '병원 진료 기록' },
   PRESCRIPTION: { label: '처방전', description: '약 처방 기록' },
   MCC_RESULT: { label: '알레르기 검사', description: 'MCC 검사 결과' },

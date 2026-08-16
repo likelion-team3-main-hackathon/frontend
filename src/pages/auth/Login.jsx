@@ -3,6 +3,26 @@ import { loginWithGoogle } from '../../api/auth'
 import './Login.css'
 
 const GOOGLE_SCRIPT_ID = 'google-identity-services'
+const DEMO_USERS = [
+  {
+    id: 'balanced',
+    label: '기본 분석 데모',
+    description: '안정적인 식단·운동 기록',
+    token: 'local:mcc-analysis-demo:analysis-demo@mcc.local:분석실 데모',
+  },
+  {
+    id: 'growth',
+    label: '성장형 데모',
+    description: '최근으로 갈수록 지표 개선',
+    token: 'local:mcc-analysis-growth-demo:growth-demo@mcc.local:성장형 데모',
+  },
+  {
+    id: 'decline',
+    label: '퇴보형 데모',
+    description: '최근으로 갈수록 지표 악화',
+    token: 'local:mcc-analysis-decline-demo:decline-demo@mcc.local:퇴보형 데모',
+  },
+]
 
 function loadGoogleIdentityServices() {
   if (window.google?.accounts?.id) {
@@ -39,8 +59,22 @@ export default function Login({ onLoginSuccess }) {
   const callbackRef = useRef(onLoginSuccess)
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const demoLoginEnabled = import.meta.env.DEV && import.meta.env.VITE_ENABLE_DEMO_LOGIN === 'true'
 
   callbackRef.current = onLoginSuccess
+
+  async function loginDemoUser(demoUser) {
+    setIsLoading(true)
+    setMessage('')
+    try {
+      const login = await loginWithGoogle(demoUser.token)
+      callbackRef.current?.(login)
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : '데모 사용자 로그인에 실패했습니다.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   useEffect(() => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim()
@@ -131,6 +165,23 @@ export default function Login({ onLoginSuccess }) {
           className={isLoading ? 'google-login-container is-loading' : 'google-login-container'}
           aria-label="Google 계정으로 로그인"
         />
+        {demoLoginEnabled && (
+          <div className="demo-login-list">
+            <small>분석실 데모 계정</small>
+            {DEMO_USERS.map((demoUser) => (
+              <button
+                key={demoUser.id}
+                type="button"
+                className={`demo-login-button demo-login-button--${demoUser.id}`}
+                disabled={isLoading}
+                onClick={() => loginDemoUser(demoUser)}
+              >
+                <strong>{demoUser.label}</strong>
+                <span>{demoUser.description}</span>
+              </button>
+            ))}
+          </div>
+        )}
         {isLoading && <p className="login-status">로그인 처리 중…</p>}
         {message && (
           <p className="login-message" role="alert">

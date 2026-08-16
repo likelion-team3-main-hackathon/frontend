@@ -47,7 +47,7 @@ function getAnalysisItems(analysis) {
   ]
 }
 
-export default function HealthAnalysis({ healthDocuments, onNext, onBack }) {
+export default function HealthAnalysis({ healthDocuments, onNext, onBack, onReturnToLab }) {
   const [analysis, setAnalysis] = useState(null)
   const [status, setStatus] = useState('분석 요청 중…')
   const [error, setError] = useState('')
@@ -141,6 +141,16 @@ export default function HealthAnalysis({ healthDocuments, onNext, onBack }) {
       >
         나만의 루틴 생성
       </button>
+      {onReturnToLab && (
+        <button
+          type="button"
+          className="analysis-return-lab-button"
+          disabled={!analysis}
+          onClick={onReturnToLab}
+        >
+          체성분 검사실로 돌아가기
+        </button>
+      )}
     </section>
   )
 }
