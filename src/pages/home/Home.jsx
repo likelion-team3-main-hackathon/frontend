@@ -20,12 +20,12 @@ function localDateKey(date) {
   return `${year}-${month}-${day}`
 }
 
-function getWeekDates() {
+function getWeekDates(focusDate = new Date()) {
   const today = new Date()
-  const mondayOffset = today.getDay() === 0 ? -6 : 1 - today.getDay()
+  const mondayOffset = focusDate.getDay() === 0 ? -6 : 1 - focusDate.getDay()
   return Array.from({ length: 7 }, (_, index) => {
-    const date = new Date(today)
-    date.setDate(today.getDate() + mondayOffset + index)
+    const date = new Date(focusDate)
+    date.setDate(focusDate.getDate() + mondayOffset + index)
     return { key: localDateKey(date), day: WEEKDAYS[date.getDay()], date: date.getDate(), isToday: localDateKey(date) === localDateKey(today) }
   })
 }
@@ -36,8 +36,17 @@ function routineSummary(routine) {
   const now = new Date()
   const totalDays = Math.max(1, Math.round((end - start) / 86400000) + 1)
   const elapsed = Math.max(0, Math.min(totalDays, Math.round((now - start) / 86400000) + 1))
-  const totalWeeks = Math.max(1, Math.ceil(totalDays / 7))
-  return { ...routine, badge: `${elapsed}일차`, progress: Math.round(elapsed / totalDays * 100), currentWeek: Math.max(1, Math.ceil(elapsed / 7)), totalWeeks }
+  const scheduledDays = routine.days || []
+  const todayKey = localDateKey(now)
+  const todayIndex = scheduledDays.findIndex((day) => day.scheduledDate === todayKey)
+  const latestIndex = scheduledDays.reduce((result, day, index) => day.scheduledDate <= todayKey ? index : result, -1)
+  const currentDay = scheduledDays.length ? Math.max(1, (todayIndex >= 0 ? todayIndex : latestIndex >= 0 ? latestIndex : 0) + 1) : elapsed
+  const totalWeeks = scheduledDays.length
+    ? Math.max(1, ...scheduledDays.map((day) => Number(day.week || 1)))
+    : Math.max(1, Math.ceil(totalDays / 7))
+  const currentWeek = scheduledDays[currentDay - 1]?.week || Math.max(1, Math.ceil(currentDay / 7))
+  const progressTotal = scheduledDays.length || totalDays
+  return { ...routine, badge: `${currentDay}일차`, progress: Math.round(currentDay / progressTotal * 100), currentWeek, totalWeeks }
 }
 
 function scheduledItems(routines, date) {
@@ -131,6 +140,21 @@ function statusForItem(item, statuses) {
   return values.every((status) => status === 'completed') ? 'completed' : 'cancelled'
 }
 
+function recordForItem(item, records) {
+  const ids = new Set((item.routineItemIds || [item.routineItemId]).filter(Boolean).map(String))
+  return records.find((record) => ids.has(String(record.routineItemId)))
+}
+
+function uniqueItems(items) {
+  const seen = new Set()
+  return items.filter((item) => {
+    const key = String(item.id)
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
 export default function Home({
   onOpenRoutine,
   onNavigate,
@@ -143,12 +167,21 @@ export default function Home({
   routineCalories = {},
   onStatusesLoaded,
   onOpenAi,
+  initialSelectedDate,
+  onDateOverrideConsumed,
 }) {
   const statusesLoadedRef = useRef(onStatusesLoaded)
+  const weekSliderRef = useRef(null)
   statusesLoadedRef.current = onStatusesLoaded
-  const weekDates = useMemo(getWeekDates, [])
-  const todayKey = weekDates.find((date) => date.isToday)?.key || weekDates[0].key
-  const [selectedDate, setSelectedDate] = useState(todayKey)
+  const initialDateRef = useRef(initialSelectedDate)
+  const todayKey = localDateKey(new Date())
+  const weekGroups = useMemo(() => [-7, 0, 7].map((offset) => {
+    const focusDate = new Date()
+    focusDate.setDate(focusDate.getDate() + offset)
+    return getWeekDates(focusDate)
+  }), [])
+  const weekDates = useMemo(() => weekGroups.flat(), [weekGroups])
+  const [selectedDate, setSelectedDate] = useState(initialDateRef.current || todayKey)
   const [activeRoutines, setActiveRoutines] = useState([])
   const [routineDetails, setRoutineDetails] = useState([])
   const [coaching, setCoaching] = useState(homeMockData.condition.coaching)
@@ -157,6 +190,19 @@ export default function Home({
   const [routineSlide, setRoutineSlide] = useState(0)
   const [activeDateKeys, setActiveDateKeys] = useState(new Set())
   const [isHealthAppLinked, setIsHealthAppLinked] = useState(false)
+  const [selectedRecords, setSelectedRecords] = useState([])
+  const [dateStatuses, setDateStatuses] = useState({})
+
+  useEffect(() => {
+    if (initialDateRef.current) onDateOverrideConsumed?.()
+  }, [onDateOverrideConsumed])
+
+  useEffect(() => {
+    const slider = weekSliderRef.current
+    if (!slider) return
+    const initialWeekIndex = Math.max(0, weekGroups.findIndex((week) => week.some((item) => item.key === selectedDate)))
+    slider.scrollLeft = slider.clientWidth * initialWeekIndex
+  }, [weekGroups])
 
   useEffect(() => {
     let active = true
@@ -166,15 +212,23 @@ export default function Home({
       if (routines.status !== 'fulfilled') return
 
       const hiddenRoutineIds = new Set(JSON.parse(localStorage.getItem('renewHiddenRoutineIds') || '[]').map(String))
-      const list = (routines.value?.data?.content || []).filter((routine) => !hiddenRoutineIds.has(String(routine.id)))
+      const allList = routines.value?.data?.content || []
+      const list = allList.filter((routine) => !hiddenRoutineIds.has(String(routine.id)))
       setIsApiConnected(true)
       setActiveRoutines(list.map(routineSummary))
-      if (list.length === 0) {
+      if (allList.length === 0) {
         setRoutineDetails([])
         return
       }
-      const details = await Promise.allSettled(list.map((routine) => getRoutine(routine.id)))
-      if (active) setRoutineDetails(details.filter((result) => result.status === 'fulfilled').map((result) => result.value.data))
+      const details = await Promise.allSettled(allList.map((routine) => getRoutine(routine.id)))
+      if (active) {
+        const detailList = details.filter((result) => result.status === 'fulfilled').map((result) => result.value.data)
+        setRoutineDetails(detailList)
+        setActiveRoutines(list.map((routine) => {
+          const detail = detailList.find((item) => String(item.id) === String(routine.id))
+          return routineSummary(detail ? { ...routine, ...detail } : routine)
+        }))
+      }
     })
     return () => { active = false }
   }, [])
@@ -208,6 +262,7 @@ export default function Home({
     getRoutineRecords(selectedDate).then((response) => {
       if (!active) return
       const nextRecords = response?.data || []
+      setSelectedRecords(nextRecords)
       const loadedStatuses = nextRecords.reduce((statuses, record) => {
         if (!record.routineItemId || statuses[record.routineItemId]) return statuses
         const details = parseDetails(record)
@@ -216,6 +271,7 @@ export default function Home({
           : 'completed'
         return statuses
       }, {})
+      setDateStatuses(loadedStatuses)
       const loadedCalories = nextRecords.reduce((calories, record) => {
         if (!record.routineItemId || calories[record.routineItemId] != null) return calories
         const details = parseDetails(record)
@@ -226,19 +282,47 @@ export default function Home({
       const latestWater = [...nextRecords].find((record) => parseDetails(record).category === 'WATER')
       setWater(latestWater ? Number(parseDetails(latestWater).glasses) : 0)
     }).catch(() => {
-      if (active) setWater(0)
+      if (active) {
+        setWater(0)
+        setSelectedRecords([])
+        setDateStatuses({})
+      }
     })
     return () => { active = false }
   }, [selectedDate])
 
-  const allScheduledRoutines = mealFirst(scheduledItems(routineDetails, selectedDate))
+  const allScheduledRoutines = scheduledItems(routineDetails, selectedDate)
+  const activeRoutineIds = new Set(activeRoutines.map((routine) => String(routine.id)))
+  const activeScheduledRoutines = allScheduledRoutines.filter((item) => activeRoutineIds.has(String(item.routineId)))
   const selectedRoutineId = activeRoutines[routineSlide]?.id
-  const displayedRoutines = selectedRoutineId == null
-    ? allScheduledRoutines
-    : allScheduledRoutines.filter((item) => String(item.routineId) === String(selectedRoutineId))
-  const nextRoutineIndex = displayedRoutines.findIndex((item) => !statusForItem(item, routineStatuses))
-  const totalCompletedCount = allScheduledRoutines.filter((item) => statusForItem(item, routineStatuses) === 'completed').length
-  const allDecided = allScheduledRoutines.length > 0 && allScheduledRoutines.every((item) => statusForItem(item, routineStatuses))
+  const selectedRoutineItems = selectedRoutineId == null
+    ? activeScheduledRoutines
+    : activeScheduledRoutines.filter((item) => String(item.routineId) === String(selectedRoutineId))
+  const recordedItems = allScheduledRoutines
+    .filter((item) => recordForItem(item, selectedRecords))
+    .map((item) => {
+      const record = recordForItem(item, selectedRecords)
+      const recordedDetails = parseDetails(record)
+      return item.activityType === 'MEAL'
+        ? { ...item, details: recordedDetails, foods: recordedDetails.foods || item.foods }
+        : item
+    })
+    .sort((left, right) => new Date(recordForItem(left, selectedRecords)?.recordedAt || 0) - new Date(recordForItem(right, selectedRecords)?.recordedAt || 0))
+  const isSelectedToday = selectedDate === todayKey
+  const isPastDate = selectedDate < todayKey
+  const displayedRoutines = isPastDate
+    ? recordedItems
+    : isSelectedToday ? uniqueItems([...recordedItems, ...mealFirst(selectedRoutineItems)]) : mealFirst(selectedRoutineItems)
+  const nextRoutineIndex = isSelectedToday ? displayedRoutines.findIndex((item) => !statusForItem(item, dateStatuses)) : -1
+  const currentReportItems = uniqueItems([...recordedItems, ...activeScheduledRoutines])
+  let issuedReportItems = []
+  try { issuedReportItems = JSON.parse(localStorage.getItem(`renew-report-items:${selectedDate}`) || '[]') } catch { issuedReportItems = [] }
+  const reportWasIssued = localStorage.getItem(`renew-report-issued:${selectedDate}`) === 'true'
+  const reportItems = reportWasIssued
+    ? (issuedReportItems.length ? issuedReportItems : recordedItems)
+    : currentReportItems
+  const totalCompletedCount = reportItems.filter((item) => statusForItem(item, dateStatuses) === 'completed').length
+  const allDecided = currentReportItems.length > 0 && currentReportItems.every((item) => statusForItem(item, dateStatuses))
 
   async function changeWater(change) {
     const next = Math.max(0, Math.min(8, water + change))
@@ -256,12 +340,16 @@ export default function Home({
           </div>
         </header>
 
-        <div className="week-selector" aria-label="이번 주 날짜 선택">
-          {weekDates.map((item) => {
-            const hasActivity = activeDateKeys.has(item.key)
-              || (item.key === selectedDate && totalCompletedCount > 0)
-            return <button type="button" key={item.key} className={`${selectedDate === item.key ? 'selected' : ''} ${hasActivity ? 'has-activity' : ''}`} onClick={() => setSelectedDate(item.key)}><small>{item.day}</small><span>{item.date}</span></button>
-          })}
+        <div className="week-slider" ref={weekSliderRef} aria-label="주별 날짜 선택">
+          {weekGroups.map((week, weekIndex) => (
+            <div className="week-selector" key={week[0].key} aria-label={weekIndex === 0 ? '지난 주' : weekIndex === 1 ? '이번 주' : '다음 주'}>
+              {week.map((item) => {
+                const hasActivity = activeDateKeys.has(item.key)
+                  || (item.key === selectedDate && totalCompletedCount > 0)
+                return <button type="button" key={item.key} className={`${selectedDate === item.key ? 'selected' : ''} ${hasActivity ? 'has-activity' : ''}`} onClick={() => setSelectedDate(item.key)}><small>{item.day}</small><span>{item.date}</span></button>
+              })}
+            </div>
+          ))}
         </div>
 
         <section className="home-section active-routine-section">
@@ -287,16 +375,16 @@ export default function Home({
         </section>
 
         <section className="today-timeline">
-          {allDecided && (
+          {(allDecided || reportWasIssued) && (
             <article className="today-completion-card">
-              <h2>오늘 {totalCompletedCount} / {allScheduledRoutines.length} 완료</h2>
+              <h2>오늘 {totalCompletedCount} / {reportItems.length} 완료</h2>
               <p>오늘의 루틴 진행 결과를 확인해 보세요</p>
-              <button type="button" onClick={() => onOpenReport?.(allScheduledRoutines, selectedDate)}>오늘의 리포트</button>
+              <button type="button" onClick={() => onOpenReport?.(reportItems, selectedDate)}>오늘의 리포트</button>
             </article>
           )}
           {displayedRoutines.length === 0 && <div className="empty-day-card">이 날짜에 예정된 루틴이 없어요.</div>}
           {displayedRoutines.map((item, index) => {
-            const status = statusForItem(item, routineStatuses)
+            const status = statusForItem(item, dateStatuses)
             const isPrimary = index === nextRoutineIndex
             const mealActivity = isMealActivity(item)
             const activityIcon = mealActivity && status === 'completed'
@@ -305,7 +393,7 @@ export default function Home({
             const compactDetail = mealActivity && status === 'completed'
               ? `섭취 ${(routineCalories[item.id] ?? item.calories ?? 0).toLocaleString()} kcal`
               : item.detail
-            return <article className={`today-card ${isPrimary ? 'primary' : ''} ${status || ''}`} key={item.id}><span className="timeline-dot" />{isPrimary ? <><div className="today-meta"><em>● {item.type}</em><b>›</b></div><h2>{item.title}</h2><p>{item.detail}</p><button type="button" className="routine-start-button" onClick={() => onStartRoutine?.(item)}>시작하기</button><button type="button" className="routine-pass-button" onClick={() => onPassRoutine?.(item)}>패스하기</button></> : <button type="button" className="compact-routine" disabled={Boolean(status)} onClick={() => onStartRoutine?.(item)}><img className="routine-activity-icon" src={activityIcon} alt="" /><div><strong>{item.type} · {item.title}</strong><small>{compactDetail}</small></div>{status === 'completed' && <span className="routine-status-icon completed">✓</span>}</button>}</article>
+            return <article className={`today-card ${isPrimary ? 'primary' : ''} ${status || ''}`} key={item.id}><span className="timeline-dot" />{isPrimary ? <><div className="today-meta"><em>● {item.type}</em><b>›</b></div><h2>{item.title}</h2><p>{item.detail}</p><button type="button" className="routine-start-button" onClick={() => onStartRoutine?.(item, false)}>시작하기</button><button type="button" className="routine-pass-button" onClick={() => onPassRoutine?.(item)}>패스하기</button></> : <button type="button" className="compact-routine" onClick={() => onStartRoutine?.(item, !isSelectedToday || Boolean(status))}><img className="routine-activity-icon" src={activityIcon} alt="" /><div><strong>{item.type} · {item.title}</strong><small>{compactDetail}</small></div>{status === 'completed' && <span className="routine-status-icon completed">✓</span>}</button>}</article>
           })}
         </section>
 

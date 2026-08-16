@@ -60,10 +60,26 @@
 /* ========================================
    주간 날짜 선택
 ======================================== */
+.week-slider {
+  display: flex;
+  width: 100%;
+  overflow-x: auto;
+  margin: 19px 0 18px;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+
+.week-slider::-webkit-scrollbar { display: none; }
+
 .week-selector {
   display: grid;
+  width: 100%;
+  min-width: 100%;
   grid-template-columns: repeat(7, 1fr);
-  margin: 19px 0 18px;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
 }
 
 .week-selector button {
@@ -148,13 +164,21 @@
 }
 
 .active-routine-card em {
-  padding: 3px 6px;
+  display: inline-flex;
+  min-height: 22px;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 0 8px;
   border-radius: 99px;
   background: #edf5e7;
   color: #4A7C36;
   font-size: 11px;
   font-style: normal;
-  font-weight: 800;}
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+}
 
 .active-routine-card > div:first-child > span {
   margin-left: auto;

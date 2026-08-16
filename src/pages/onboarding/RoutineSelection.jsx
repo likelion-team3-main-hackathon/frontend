@@ -72,7 +72,10 @@ export default function RoutineSelection({ analysis, onComplete, onBack, onCance
       return
     }
     if (isReset) {
-      setResetPrompt(selected.some(isMealRecommendation) ? 'meal-change' : 'choose-mode')
+      setResetPrompt({
+        hasMeal: selected.some(isMealRecommendation),
+        hasExercise: selected.some((item) => !isMealRecommendation(item)),
+      })
       return
     }
     generateRoutine('initial')
@@ -93,7 +96,9 @@ export default function RoutineSelection({ analysis, onComplete, onBack, onCance
     try {
       let replacedRoutineIds = []
       let preservedRoutineIds = []
-      if (isReset && resetMode === 'replace') {
+      if (isReset && resetMode.includes('replace')) {
+        const replaceMeal = resetMode.includes('meal-replace')
+        const replaceExercise = resetMode.includes('exercise-replace')
         const currentRoutines = await getRoutines()
         const currentList = currentRoutines?.data?.content || []
         const detailResults = await Promise.allSettled(currentList.map((item) => getRoutine(item.id)))
@@ -101,9 +106,8 @@ export default function RoutineSelection({ analysis, onComplete, onBack, onCance
           const id = currentList[index]?.id
           if (!id || result.status !== 'fulfilled') return
           const kinds = routineActivityKinds(result.value?.data)
-          const shouldReplace = meal
-            ? kinds.hasMeal
-            : kinds.hasExercise && !kinds.hasMeal
+          const shouldReplace = (replaceMeal && kinds.hasMeal)
+            || (replaceExercise && kinds.hasExercise && !kinds.hasMeal)
           if (shouldReplace) replacedRoutineIds.push(id)
           else preservedRoutineIds.push(id)
         })
@@ -203,14 +207,20 @@ export default function RoutineSelection({ analysis, onComplete, onBack, onCance
       {resetPrompt && (
         <div className="routine-reset-modal-backdrop" role="presentation" onClick={() => setResetPrompt(null)}>
           <section className="routine-reset-modal" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
-            <h2>{resetPrompt === 'meal-change' ? '식단 루틴은 변경만 가능해요' : '루틴을 어떻게 적용할까요?'}</h2>
-            <p>{resetPrompt === 'meal-change'
-              ? '해당 루틴은 식단이 겹쳐 다른 루틴들과 합쳐질 수 없습니다. 해당 루틴으로 변경하시겠습니까?'
-              : '현재 루틴에 새 루틴을 추가하거나, 기존 루틴을 선택한 루틴으로 변경할 수 있어요.'}</p>
+            <h2>{resetPrompt.hasMeal ? '식단 루틴은 변경만 가능해요' : '운동 루틴을 어떻게 적용할까요?'}</h2>
+            <p>{resetPrompt.hasMeal
+              ? `해당 루틴은 식단이 겹쳐 다른 루틴들과 합쳐질 수 없습니다. 기존 식단 루틴은 선택한 루틴으로 변경됩니다.${resetPrompt.hasExercise ? ' 운동 루틴은 추가하거나 변경할 수 있어요.' : ''}`
+              : '현재 운동 루틴에 새 루틴을 추가하거나, 기존 운동 루틴을 선택한 루틴으로 변경할 수 있어요.'}</p>
             <div>
-              {resetPrompt === 'choose-mode' && <button type="button" onClick={() => generateRoutine('add')}>추가</button>}
-              <button type="button" className="primary" onClick={() => generateRoutine('replace')}>변경</button>
-              {resetPrompt === 'meal-change' && <button type="button" onClick={() => setResetPrompt(null)}>취소</button>}
+              {resetPrompt.hasExercise ? (
+                <>
+                  <button type="button" onClick={() => generateRoutine(resetPrompt.hasMeal ? 'meal-replace_exercise-add' : 'exercise-add')}>운동 추가</button>
+                  <button type="button" className="primary" onClick={() => generateRoutine(resetPrompt.hasMeal ? 'meal-replace_exercise-replace' : 'exercise-replace')}>운동 변경</button>
+                </>
+              ) : (
+                <button type="button" className="primary" onClick={() => generateRoutine('meal-replace')}>변경</button>
+              )}
+              {resetPrompt.hasMeal && <button type="button" onClick={() => setResetPrompt(null)}>취소</button>}
             </div>
           </section>
         </div>

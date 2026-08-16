@@ -1,8 +1,27 @@
 import { useEffect, useState } from 'react'
-import { createHealthAnalysis, getHealthDocuments, waitForHealthAnalysis } from '../../api/health'
+import { createHealthAnalysis, getLatestHealthAnalysis, waitForHealthAnalysis } from '../../api/health'
 import './HealthAnalysis.css'
 
 const analysisCreationRequests = new Map()
+const GOAL_LABELS = {
+  WEIGHT_LOSS: '체중 감량',
+  MUSCLE_GAIN: '체형 개선과 근육 강화',
+  REHABILITATION: '재활과 통증 완화',
+  HEALTH_METRIC_MANAGEMENT: '혈당·혈압 등 건강 수치 관리',
+}
+
+function applyCurrentGoal(analysis) {
+  try {
+    const goal = JSON.parse(sessionStorage.getItem('onboardingDraft') || '{}')?.goal
+    if (!goal) return analysis
+    return {
+      ...analysis,
+      goals: [{ type: goal, description: GOAL_LABELS[goal] || goal }],
+    }
+  } catch {
+    return analysis
+  }
+}
 
 function createHealthAnalysisOnce(documentIds, idempotencyKey) {
   const requestKey = idempotencyKey || documentIds.join(',')
@@ -65,17 +84,18 @@ export default function HealthAnalysis({ healthDocuments, onNext, onBack, onRetu
 
     async function analyze() {
       try {
-        let analysisDocumentIds = documentIds
         if (healthDocuments?.useExisting) {
           setStatus('기존 건강 정보를 불러오고 있어요…')
-          const documentsResponse = await getHealthDocuments(0, 100)
-          analysisDocumentIds = (documentsResponse?.data?.content || []).map((document) => document.documentId).filter(Boolean)
-          if (!analysisDocumentIds.length) throw new Error('저장된 건강 자료를 찾지 못했습니다.')
-          setSourceCount(analysisDocumentIds.length)
-          setStatus('변경한 목표와 기존 건강 정보를 다시 분석하고 있어요…')
+          const latestResponse = await getLatestHealthAnalysis()
+          const latestAnalysis = latestResponse?.data
+          if (!latestAnalysis?.id) throw new Error('저장된 건강 분석 정보를 찾지 못했습니다.')
+          setSourceCount(latestAnalysis.documentFindings?.length || 0)
+          setAnalysis(applyCurrentGoal(latestAnalysis))
+          setStatus('기존 분석과 변경한 목표를 반영했어요')
+          return
         }
         const response = await createHealthAnalysisOnce(
-          analysisDocumentIds,
+          documentIds,
           healthDocuments.analysisRequestKey || crypto.randomUUID(),
         )
         const analysisId = response?.data?.analysisId
@@ -107,11 +127,13 @@ export default function HealthAnalysis({ healthDocuments, onNext, onBack, onRetu
 
   return (
     <section className="health-analysis-page">
-      <button type="button" className="onboarding-analysis-back" onClick={onBack} aria-label="직전 페이지로 돌아가기">‹</button>
+      <header className="health-analysis-header">
+        <button type="button" className="onboarding-analysis-back" onClick={onBack} aria-label="직전 페이지로 돌아가기">‹</button>
+      </header>
       <div className="analysis-mask">마스코트 · {status}</div>
       <h1>{analysis ? `${analysis.documentFindings?.length || sourceCount}개 문서와 목표를 종합했어요` : '건강 정보를 확인하고 있어요'}</h1>
       <p className="analysis-source-count">
-        {healthDocuments?.useExisting ? `변경한 목표와 기존 건강 정보 ${sourceCount}개를 다시 분석합니다` : `선택한 건강 정보 ${sourceCount}개를 분석합니다`}
+        {healthDocuments?.useExisting ? `기존 분석 정보 ${sourceCount}개와 변경한 목표를 반영합니다` : `선택한 건강 정보 ${sourceCount}개를 분석합니다`}
         {analysis?.id ? ` · 분석 #${analysis.id}` : ''}
       </p>
 

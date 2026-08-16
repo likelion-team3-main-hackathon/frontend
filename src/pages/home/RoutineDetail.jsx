@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { getRoutine } from '../../api/routine'
 import exerciseIcon from '../../assets/icons/routine/exercise.png'
 import mealIcon from '../../assets/icons/routine/meal.png'
-import nextIcon from '../../assets/icons/next.png'
 import './RoutineDetail.css'
 
 function isMealRoutine(routine) {
@@ -17,6 +16,13 @@ function parseContent(content) {
 function dateLabel(value) {
   const [, month, day] = String(value || '').split('-')
   return month && day ? `${Number(month)}월 ${Number(day)}일` : ''
+}
+
+function localDateKey(date = new Date()) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 function routineDaysFromApi(detail, tab) {
@@ -62,7 +68,7 @@ function routineDaysFromApi(detail, tab) {
       week: day.week,
       dayNumber: index + 1,
       scheduledDate: day.scheduledDate,
-      label: day.scheduledDate === new Date().toISOString().slice(0, 10) ? '오늘' : '',
+      label: day.scheduledDate === localDateKey() ? '오늘' : '',
       summary: focus,
       meta: tab === 'meal'
         ? `${items.length}끼 · ${calories.toLocaleString()} kcal`
@@ -75,7 +81,7 @@ function routineDaysFromApi(detail, tab) {
   }))
 }
 
-export default function RoutineDetail({ routine, onBack, onOpenAi }) {
+export default function RoutineDetail({ routine, onBack, onDelete }) {
   const [detail, setDetail] = useState(null)
   const [activeTab, setActiveTab] = useState(isMealRoutine(routine) ? 'meal' : 'exercise')
   const [expandedDays, setExpandedDays] = useState(new Set())
@@ -125,8 +131,6 @@ export default function RoutineDetail({ routine, onBack, onOpenAi }) {
         <div className="routine-weeks">{Array.from({ length: routine.totalWeeks }, (_, index) => <span className={index + 1 === routine.currentWeek ? 'current' : ''} key={index}>{index + 1}주</span>)}</div>
       </article>
 
-      <button type="button" className="routine-ai-summary" onClick={onOpenAi}>AI 요약 <img src={nextIcon} alt="" /></button>
-
       <div className="routine-type-tabs">
         <button type="button" className={activeTab === 'meal' ? 'active' : ''} onClick={() => setActiveTab('meal')}>식사 루틴</button>
         <button type="button" className={activeTab === 'exercise' ? 'active' : ''} onClick={() => setActiveTab('exercise')}>운동 루틴</button>
@@ -138,8 +142,8 @@ export default function RoutineDetail({ routine, onBack, onOpenAi }) {
         {detail && days.length === 0 && <p>이 루틴에는 {activeTab === 'meal' ? '식단' : '운동'} 일정이 없어요.</p>}
         {days.map((day) => {
           const isExpanded = expandedDays.has(day.id)
-          const displayNumber = activeTab === 'exercise' ? day.sequenceNumber : day.dayNumber
-          const displayUnit = activeTab === 'exercise' ? '회차' : '일차'
+          const displayNumber = day.dayNumber
+          const displayUnit = '일차'
           return (
           <article className={`routine-day-schedule ${isExpanded ? 'expanded' : 'collapsed'} ${day.label === '오늘' ? 'today' : ''}`} key={day.id}>
             <button type="button" className="routine-day-header" onClick={() => toggleDay(day.id)} aria-expanded={isExpanded}>
@@ -162,6 +166,13 @@ export default function RoutineDetail({ routine, onBack, onOpenAi }) {
           </article>
         )})}
       </div>
+      <button
+        type="button"
+        className="routine-delete-button"
+        onClick={() => {
+          if (window.confirm('이 루틴을 목록에서 삭제할까요?')) onDelete?.(routine.id)
+        }}
+      >루틴 삭제하기</button>
     </section>
   )
 }

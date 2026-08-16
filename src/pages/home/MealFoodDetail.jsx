@@ -8,7 +8,7 @@ const INGREDIENT_FALLBACKS = {
   '방울토마토': ['방울토마토'],
 }
 
-export default function MealFoodDetail({ food, photoUrl, routineId, onBack, onSave, onDelete }) {
+export default function MealFoodDetail({ food, photoUrl, routineId, onBack, onSave, onDelete, readOnly = false }) {
   const baseAmount = Number(food.amount || 200)
   const [amount, setAmount] = useState(baseAmount)
   const [cartStatus, setCartStatus] = useState('')
@@ -73,11 +73,11 @@ export default function MealFoodDetail({ food, photoUrl, routineId, onBack, onSa
 
       <article className="food-detail-time"><span><img src={bellIcon} alt="" />{recordedTime}</span><small>자동</small></article>
 
-      <div className="food-unit-selector"><button type="button" aria-pressed="false">인분(200g)</button><button type="button" className="active" aria-pressed="true">g</button></div>
+      <div className="food-unit-selector"><button type="button" disabled={readOnly} aria-pressed="false">인분(200g)</button><button type="button" disabled={readOnly} className="active" aria-pressed="true">g</button></div>
 
-      <div className="food-amount-stepper"><button type="button" onClick={() => changeAmount(-serving)}>−</button><strong>{amount}</strong><button type="button" onClick={() => changeAmount(serving)}>＋</button></div>
+      <div className="food-amount-stepper"><button type="button" disabled={readOnly} onClick={() => changeAmount(-serving)}>−</button><strong>{amount}</strong><button type="button" disabled={readOnly} onClick={() => changeAmount(serving)}>＋</button></div>
 
-      <div className="food-detail-row ingredient-row"><span>재료 {ingredients.length}가지<small>{ingredients.join(' · ')}</small></span><button type="button" disabled={isAddingToCart} onClick={addIngredientsToCart}>{isAddingToCart ? '담는 중' : '담기'}</button></div>
+      <div className="food-detail-row ingredient-row"><span>재료 {ingredients.length}가지<small>{ingredients.join(' · ')}</small></span>{!readOnly && <button type="button" disabled={isAddingToCart} onClick={addIngredientsToCart}>{isAddingToCart ? '담는 중' : '담기'}</button>}</div>
       {cartStatus && <p className="food-cart-status">{cartStatus}</p>}
       <button type="button" className="food-detail-row"><span>요리법 보기</span><b>›</b></button>
 
@@ -87,8 +87,8 @@ export default function MealFoodDetail({ food, photoUrl, routineId, onBack, onSa
         <small>탄 {nutrition.carbs}　단 {nutrition.protein}　지 {nutrition.fat}</small>
       </article>
 
-      <button type="button" className="meal-confirm-button" onClick={() => onSave({ ...food, amount, serving, ...nutrition })}>확인</button>
-      <button type="button" className="food-delete-button" onClick={onDelete}>이 음식 삭제하기</button>
+      <button type="button" className="meal-confirm-button" onClick={readOnly ? onBack : () => onSave({ ...food, amount, serving, ...nutrition })}>{readOnly ? '돌아가기' : '확인'}</button>
+      {!readOnly && <button type="button" className="food-delete-button" onClick={onDelete}>이 음식 삭제하기</button>}
     </section>
   )
 }
