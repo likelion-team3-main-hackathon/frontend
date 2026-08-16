@@ -126,7 +126,6 @@ export default function Router() {
           <HealthData
             onBack={() => setPage(healthDataBackPage)}
             allowSkip={isRoutineReset}
-            onBack={() => setPage('goal')}
             onNext={(data) => {
               if (!data) {
                 setHealthDocuments({ documents: [], documentIds: [], useExisting: true })
@@ -319,6 +318,7 @@ export default function Router() {
 
         {page === 'my' && <MyPage initialProfile={profile} onNavigate={setPage} onResetRoutine={() => {
           setIsRoutineReset(true)
+          setHealthDataBackPage('goal')
           setPage('goal')
         }} onLoggedOut={() => {
           setProfile(null)

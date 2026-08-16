@@ -30,15 +30,30 @@ export default function AnalysisLab({ onNavigate }) {
   }, [period, today])
 
   const periodMetrics = useMemo(() => {
-    const idByType = { MEAL: 'meal', EXERCISE: 'exercise', BODY_COMPOSITION: 'body' }
-    return (report?.metrics || []).map((metric) => ({ ...metric, id: idByType[metric.type] }))
+    const idByType = {
+      MEAL: 'meal',
+      EXERCISE: 'exercise',
+      BODY_FAT: 'fat',
+      SKELETAL_MUSCLE: 'muscle',
+      HEALTH_MANAGEMENT: 'health',
+    }
+    const body = (report?.labPreviews || []).find((metric) => metric.type === 'BODY_COMPOSITION')
+    const legacyMetrics = (report?.metrics || []).filter((metric) => metric.type === 'MEAL' || metric.type === 'EXERCISE')
+    const fallback = [
+      legacyMetrics.find((metric) => metric.type === 'MEAL') || { type: 'MEAL', label: '식단', score: null, status: 'INSUFFICIENT_DATA' },
+      legacyMetrics.find((metric) => metric.type === 'EXERCISE') || { type: 'EXERCISE', label: '운동', score: null, status: 'INSUFFICIENT_DATA' },
+      { type: 'BODY_FAT', label: '지방', score: body?.score ?? null, status: body?.status, note: '체성분 체지방 기준' },
+      { type: 'SKELETAL_MUSCLE', label: '근육', score: body?.score ?? null, status: body?.status, note: '체성분 골격근 기준' },
+      { type: 'HEALTH_MANAGEMENT', label: '건강 관리', score: 80, status: 'MOCK', note: '임상·의료기록 연동 전 임시 점수' },
+    ]
+    return (report?.wellnessAxes || fallback).map((metric) => ({ ...metric, id: idByType[metric.type] || metric.type.toLowerCase() }))
   }, [report])
 
   const labMetrics = useMemo(() => {
     const idByType = { MEAL: 'meal', EXERCISE: 'exercise', BODY_COMPOSITION: 'body' }
     return [
       ...(report?.labPreviews || []).map((metric) => ({ ...metric, id: idByType[metric.type] })),
-      { id: 'clinical', label: '임상', score: null, status: 'COMING_SOON', note: '임상 검사실은 추후 제공 예정이에요.' },
+      { id: 'clinical', label: '건강 관리', score: null, status: 'COMING_SOON', note: '임상·의료기록 검사실은 추후 제공 예정이에요.' },
     ]
   }, [report])
 
