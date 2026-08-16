@@ -1,4 +1,4 @@
-# Tri Lion Health Frontend
+# MCC Wellness Frontend
 
 ## 백엔드 API 연결 현황
 

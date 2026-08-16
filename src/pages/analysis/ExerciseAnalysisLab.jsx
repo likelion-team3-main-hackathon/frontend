@@ -1,43 +1,49 @@
 import { useEffect, useMemo, useState } from 'react'
-import { getRoutineRecords } from '../../api/record'
-import { getRoutine, getRoutines } from '../../api/routine'
-import { aggregateExerciseByRoutineWeek, BODY_PARTS, dateKey } from '../../utils/analysisMetrics'
+import { getExerciseAnalysis } from '../../api/analysis'
 import './ExerciseAnalysisLab.css'
 
+const BAR_MAX_RATIO = 1.5
+
+function volumeStatus(completedSets, recommendedSets) {
+  if (!recommendedSets) return { className: 'empty', label: '자료 없음' }
+  const ratio = completedSets / recommendedSets
+  if (ratio < .8) return { className: 'low', label: '미달' }
+  if (ratio > 1.2) return { className: 'over', label: '초과' }
+  return { className: 'good', label: '적정' }
+}
+
+function dateKey(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
+
 export default function ExerciseAnalysisLab({ onBack }) {
-  const [dailyRecords, setDailyRecords] = useState([])
-  const [routineDetail, setRoutineDetail] = useState(null)
-  const dates = useMemo(() => Array.from({ length: 28 }, (_, offset) => { const date = new Date(); date.setDate(date.getDate() - (27 - offset)); return date }), [])
+  const [report, setReport] = useState(null)
+  const [error, setError] = useState('')
+  const range = useMemo(() => {
+    const to = new Date()
+    const from = new Date(to)
+    from.setDate(to.getDate() - 27)
+    return { from: dateKey(from), to: dateKey(to) }
+  }, [])
 
   useEffect(() => {
     let active = true
-    Promise.allSettled([...dates.map((date) => getRoutineRecords(dateKey(date))), getRoutines()]).then((results) => {
-      if (!active) return
-      setDailyRecords(results.slice(0, 28).map((result, index) => ({ date: dates[index], records: result.status === 'fulfilled' ? result.value?.data || [] : [] })))
-      const routineResult = results[28]
-      const routines = routineResult.status === 'fulfilled' ? routineResult.value?.data?.content || [] : []
-      const exerciseRoutine = routines.find((item) => item.status === 'ACTIVE' && (item.type === 'EXERCISE' || item.type === 'MIXED')) || routines.find((item) => item.type === 'EXERCISE' || item.type === 'MIXED')
-      if (exerciseRoutine) getRoutine(exerciseRoutine.id).then((response) => { if (active) setRoutineDetail(response?.data || null) }).catch(() => {})
-    })
+    getExerciseAnalysis(range.from, range.to)
+      .then((response) => { if (active) setReport(response?.data || null) })
+      .catch((requestError) => { if (active) setError(requestError.message) })
     return () => { active = false }
-  }, [dates])
+  }, [range])
 
-  const report = useMemo(() => aggregateExerciseByRoutineWeek(dailyRecords, routineDetail), [dailyRecords, routineDetail])
-  const hasRecords = report.completed.length > 0
-  const partValues = report.parts
-  const maxWeekly = Math.max(...report.weeks.map((week) => week.volume), 1)
-  const maxPart = Math.max(...Object.values(partValues), 1)
-  const displayWeeks = Array.from({ length: report.totalWeeks }, (_, index) => report.weeks.find((week) => week.week === index + 1) || { week: index + 1, volume: 0, future: index + 1 > report.currentWeek })
-  const lowestPart = BODY_PARTS.reduce((lowest, part) => partValues[part] < partValues[lowest] ? part : lowest, BODY_PARTS[0])
-  const score = hasRecords ? Math.min(100, Math.round(55 + report.current.count * 3 + Math.min(20, report.current.sets))) : 0
-  const previousWeek = report.weeks.find((week) => week.week === report.currentWeek - 1)
-  const increase = previousWeek?.volume ? Math.round((report.current.volume - previousWeek.volume) / previousWeek.volume * 100) : null
+  const parts = report?.muscleGroupVolumes || []
+  const weeks = report?.weeklyVolume || []
+  const maxWeekly = Math.max(...weeks.map((week) => week.completedSets), 1)
+  const lowest = parts.reduce((result, part) => !result || part.achievementRate < result.achievementRate ? part : result, null)
 
   return <section className="exercise-lab-page"><div className="exercise-lab-scroll">
-    <header><button type="button" onClick={onBack}>‹</button><h1>운동 검사실</h1><b>{score}/100</b></header>
-    <p className="exercise-overview">현재 {report.currentWeek}주차 · {increase == null ? '이전 주 비교 없음' : `주간 훈련량 ${increase >= 0 ? '+' : ''}${increase}%`} · {report.current.sets}세트 · {Math.round(report.current.minutes)}분 · {Math.round(report.current.calories)} kcal</p>
-    <section className="body-volume"><header><h2>부위별 볼륨</h2><span>세트 수 · 권장 세트</span></header>{BODY_PARTS.map((part) => <article className={part === lowestPart ? 'low' : ''} key={part}><strong>{part}</strong><div><i style={{ width: `${partValues[part] / maxPart * 88}%` }} /><em /></div><b>{partValues[part]}</b></article>)}</section>
-    <section className="weekly-volume"><header><h2>주차별 훈련량</h2><b>{increase == null ? `${report.currentWeek}주차 진행 중` : `${increase >= 0 ? '+' : ''}${increase}%`}</b></header><div style={{ gridTemplateColumns: `repeat(${Math.max(1, displayWeeks.length)}, 1fr)` }}>{displayWeeks.map((week) => <span className={week.future ? 'future' : ''} key={week.week}><b>{week.future ? '–' : Math.round(week.volume).toLocaleString()}</b><i className={!week.volume ? 'empty' : ''} style={{ height: week.volume ? `${Math.max(8, week.volume / maxWeekly * 100)}%` : '2px' }} /><small>{week.week}주</small></span>)}</div><p>볼륨 지수 · 세트 × 반복 × 중량 · 미래 주차는 집계 제외</p></section>
-    <section className="exercise-analysis"><h2>분석</h2><p>{hasRecords ? `${report.currentWeek}주차 실제 수행 기록을 기준으로 ${lowestPart} 훈련량이 다른 부위에 비해 낮습니다. 다음 주에는 ${lowestPart} 동작을 보완하면 균형을 맞출 수 있어요.` : `${report.currentWeek}주차에 완료된 운동 기록이 없어 부위별 훈련량을 계산할 수 없습니다.`}</p><button type="button">다음 주에 {lowestPart} 2회 반영하기</button></section>
+    <header><button type="button" onClick={onBack}>‹</button><h1>운동 검사실</h1><b>{report?.score ?? '–'}/100</b></header>
+    <p className="exercise-overview">최근 4주 · 완료 {report?.completedSets || 0}세트 / 권장 {report?.recommendedSets || 0}세트 · {report?.durationMinutes || 0}분</p>
+    <section className="body-volume"><header><h2>부위별 볼륨</h2><span>완료 세트 / 권장 세트</span></header>{parts.length ? parts.map((part) => { const ratio = part.recommendedSets ? part.completedSets / part.recommendedSets : 0; const rate = Math.min(ratio, BAR_MAX_RATIO) / BAR_MAX_RATIO * 100; const status = volumeStatus(part.completedSets, part.recommendedSets); return <article className={status.className} key={part.muscleGroup}><strong>{part.label}</strong><div><i style={{ width: `${rate}%` }} /><em aria-label="권장 세트" /></div><b>{part.completedSets}/{part.recommendedSets}<small>{status.label} {part.recommendedSets ? `${Math.round(ratio * 100)}%` : ''}</small></b></article> }) : <p>운동 계획이나 완료 기록이 없습니다.</p>}<p className="volume-legend"><span className="low">■ 미달</span><span className="good">■ 적정</span><span className="over">■ 초과</span><span className="target">│ 권장 세트 100%</span></p><small className="volume-scale">막대 전체는 권장 세트의 150%까지 표시합니다.</small></section>
+    <section className="weekly-volume"><header><h2>주차별 훈련량</h2><b>완료 세트</b></header><div style={{ gridTemplateColumns: `repeat(${Math.max(1, weeks.length)}, 1fr)` }}>{weeks.map((week, index) => <span key={week.weekStart}><b>{week.completedSets}</b><i className={!week.completedSets ? 'empty' : ''} style={{ height: week.completedSets ? `${Math.max(8, week.completedSets / maxWeekly * 100)}%` : '2px' }} /><small>{index + 1}주</small></span>)}</div><p>실제 완료된 운동 기록만 집계합니다.</p></section>
+    <section className="exercise-analysis"><h2>분석</h2><p>{error || report?.summary || '운동 기록을 불러오고 있습니다.'}</p><button type="button">다음 주에 {lowest?.label || '운동'} 반영하기</button></section>
   </div></section>
 }
