@@ -28,7 +28,7 @@ function getDraft() {
   }
 }
 
-export default function Goal({ onNext }) {
+export default function Goal({ onNext, onGoHome }) {
   const [form, setForm] = useState(() => ({
     name: '',
     birthDate: '',
@@ -197,6 +197,9 @@ export default function Goal({ onNext }) {
           onClick={saveOnboarding}
         >
           {isSubmitting ? '저장 중…' : '다음'}
+        </button>
+        <button type="button" className="temporary-home-button" onClick={onGoHome}>
+          임시로 메인 화면 보기
         </button>
       </footer>
     </section>

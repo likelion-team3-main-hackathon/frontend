@@ -46,14 +46,20 @@
 }
 
 .my-routine-summary em {
-  padding: 3px 7px;
+  display: inline-flex;
+  min-height: 22px;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 0 8px;
   border-radius: 99px;
   background: #f1f6ea;
   color: #4a7c36;
   font-size: 11px;
   font-style: normal;
   font-weight: 900;
-  line-height: 11px;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .my-routine-summary > div:first-child > span {
@@ -61,35 +67,11 @@
   color: #8f958a;
 }
 
-/* AI 요약 */
-.routine-ai-summary {
-  display: flex;
-  width: 100%;
-  min-height: 52px;
-  align-items: center;
-  justify-content: space-between;
-  align-self: stretch;
-  margin-top: 14px;
-  padding: 0 18px;
-  border: 0;
-  border-radius: 14px;
-  background: #e8f2dd;
-  color: #4e9e36;
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.routine-ai-summary img {
-  width: 18px;
-  height: 18px;
-  object-fit: contain;
-}
-
 /* 식사/운동 탭 */
 .routine-type-tabs {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  margin-top: 13px;
+  margin-top: 14px;
   padding: 3px;
   border-radius: 12px;
   background: #ebe7da;
@@ -156,29 +138,31 @@
 
 /* 일차 숫자 배지 */
 .routine-day-number {
+  box-sizing: border-box;
   display: flex;
-  width: 42px;
-  height: 42px;
-  flex: 0 0 42px;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  border-radius: 13px;
+  gap: 1px;
+  border-radius: 12px;
   background: #f1f6ea;
   color: #4a7c36;
 }
 
 .routine-day-number strong {
-  font-size: 16px;
+  margin: 0;
+  font-size: 18px;
   font-weight: 900;
-  line-height: 16px;
+  line-height: 19px;
 }
 
 .routine-day-number small {
   color: #8cab7d;
-  font-size: 8px;
-  line-height: 8px;
+  font-size: 9px;
+  line-height: 10px;
   font-style: normal;
   font-weight: 700;
 }
@@ -361,3 +345,4 @@
 .routine-day-detail span {
   margin-left: 3px;
 }
+.routine-delete-button{width:100%;min-height:44px;margin-top:24px;border:1px solid #e5d7d2;border-radius:12px;background:#fff;color:#a55347;font-size:13px;font-weight:700}
