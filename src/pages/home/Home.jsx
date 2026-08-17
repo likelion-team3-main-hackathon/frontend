@@ -70,6 +70,7 @@ function scheduledItems(routines, date) {
           estimatedMinutes: Number(exercise.estimatedMinutes || 0),
           sectionType: section.sectionType,
           sectionTitle: section.title,
+          sectionId: section.sectionId,
         })))
       const meals = exercises.filter((exercise) => exercise.activityType === 'MEAL').map((meal) => {
         const details = parseDetails({ details: meal.content })
@@ -212,6 +213,12 @@ export default function Home({
       if (routines.status !== 'fulfilled') return
 
       const hiddenRoutineIds = new Set(JSON.parse(localStorage.getItem('renewHiddenRoutineIds') || '[]').map(String))
+      const latestGeneratedRoutineId = sessionStorage.getItem('latestGeneratedRoutineId')
+      if (latestGeneratedRoutineId) {
+        hiddenRoutineIds.delete(String(latestGeneratedRoutineId))
+        localStorage.setItem('renewHiddenRoutineIds', JSON.stringify([...hiddenRoutineIds]))
+        sessionStorage.removeItem('latestGeneratedRoutineId')
+      }
       const allList = routines.value?.data?.content || []
       const list = allList.filter((routine) => !hiddenRoutineIds.has(String(routine.id)))
       setIsApiConnected(true)
@@ -324,6 +331,26 @@ export default function Home({
   const totalCompletedCount = reportItems.filter((item) => statusForItem(item, dateStatuses) === 'completed').length
   const allDecided = currentReportItems.length > 0 && currentReportItems.every((item) => statusForItem(item, dateStatuses))
 
+  function openRoutineSession(item, viewOnly = false) {
+    if (!isMealActivity(item)) {
+      onStartRoutine?.(item, viewOnly)
+      return
+    }
+
+    const dayMeals = allScheduledRoutines
+      .filter((meal) => isMealActivity(meal)
+        && String(meal.routineId) === String(item.routineId)
+        && meal.scheduledDate === item.scheduledDate)
+      .map((meal) => {
+        const record = recordForItem(meal, selectedRecords)
+        if (!record) return meal
+        const recordedDetails = parseDetails(record)
+        return { ...meal, details: recordedDetails, foods: recordedDetails.foods || meal.foods }
+      })
+
+    onStartRoutine?.({ ...item, dayMeals: dayMeals.length ? dayMeals : [item] }, viewOnly)
+  }
+
   async function changeWater(change) {
     const next = Math.max(0, Math.min(8, water + change))
     setWater(next)
@@ -393,7 +420,7 @@ export default function Home({
             const compactDetail = mealActivity && status === 'completed'
               ? `섭취 ${(routineCalories[item.id] ?? item.calories ?? 0).toLocaleString()} kcal`
               : item.detail
-            return <article className={`today-card ${isPrimary ? 'primary' : ''} ${status || ''}`} key={item.id}><span className="timeline-dot" />{isPrimary ? <><div className="today-meta"><em>● {item.type}</em><b>›</b></div><h2>{item.title}</h2><p>{item.detail}</p><button type="button" className="routine-start-button" onClick={() => onStartRoutine?.(item, false)}>시작하기</button><button type="button" className="routine-pass-button" onClick={() => onPassRoutine?.(item)}>패스하기</button></> : <button type="button" className="compact-routine" onClick={() => onStartRoutine?.(item, !isSelectedToday || Boolean(status))}><img className="routine-activity-icon" src={activityIcon} alt="" /><div><strong>{item.type} · {item.title}</strong><small>{compactDetail}</small></div>{status === 'completed' && <span className="routine-status-icon completed">✓</span>}</button>}</article>
+            return <article className={`today-card ${isPrimary ? 'primary' : ''} ${status || ''}`} key={item.id}><span className="timeline-dot" />{isPrimary ? <><button type="button" className="today-primary-content" onClick={() => mealActivity && openRoutineSession(item, false)}><div className="today-meta"><em>● {item.type}</em><b>›</b></div><h2>{item.title}</h2><p>{item.detail}</p></button><button type="button" className="routine-start-button" onClick={() => openRoutineSession(item, false)}>시작하기</button><button type="button" className="routine-pass-button" onClick={() => onPassRoutine?.(item)}>패스하기</button></> : <button type="button" className="compact-routine" onClick={() => openRoutineSession(item, !isSelectedToday || Boolean(status))}><img className="routine-activity-icon" src={activityIcon} alt="" /><div><strong>{item.type} · {item.title}</strong><small>{compactDetail}</small></div>{status === 'completed' && <span className="routine-status-icon completed">✓</span>}</button>}</article>
           })}
         </section>
 

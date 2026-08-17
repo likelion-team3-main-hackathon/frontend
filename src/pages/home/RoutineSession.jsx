@@ -1,5 +1,5 @@
 import './RoutineSession.css'
-import MealRoutineSession from './MealRoutineSession'
+import MealDaySession from './MealDaySession'
 import ExerciseRoutineSession from './ExerciseRoutineSession'
 
 function isMeal(item) {
@@ -8,6 +8,6 @@ function isMeal(item) {
 
 export default function RoutineSession({ item, onDecision, onClose, viewOnly = false }) {
   if (!item) return null
-  if (isMeal(item)) return <MealRoutineSession item={item} onDecision={onDecision} onClose={onClose} viewOnly={viewOnly} />
+  if (isMeal(item)) return <MealDaySession item={item} onDecision={onDecision} onClose={onClose} viewOnly={viewOnly} />
   return <ExerciseRoutineSession item={item} onDecision={onDecision} onClose={onClose} viewOnly={viewOnly} />
 }

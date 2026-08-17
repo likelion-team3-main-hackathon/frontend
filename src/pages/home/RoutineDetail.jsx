@@ -36,16 +36,33 @@ function routineDaysFromApi(detail, tab) {
           return tab === 'meal'
             ? {
                 id: exercise.exerciseId,
+                routineItemId: exercise.exerciseId,
+                routineItemIds: [exercise.exerciseId],
+                activityType: 'MEAL',
                 mealType: section.title?.replace(' 식단', '') || '식단',
                 name: exercise.name,
                 meta: `${Number(content.calories || exercise.targetValue || 0).toLocaleString()} kcal · 탄 ${content.carbohydrateGrams || 0} 단 ${content.proteinGrams || 0} 지 ${content.fatGrams || 0}`,
+                foods: content.foods || [],
+                details: content,
               }
             : {
                 id: exercise.exerciseId,
+                exerciseId: exercise.exerciseId,
+                activityType: exercise.activityType || 'EXERCISE',
                 sectionType: section.sectionType,
                 sectionTitle: section.title,
+                sectionId: section.sectionId,
                 name: exercise.name,
-                sets: exercise.sets || 1,
+                targetValue: Number(exercise.targetValue || 0),
+                targetUnit: exercise.targetUnit || 'REPETITIONS',
+                sets: Number(exercise.sets || 1),
+                restSeconds: Number(exercise.restSeconds || 0),
+                weightKg: Number(content.weightKg || content.weight || String(exercise.memo || '').match(/[\d.]+(?=\s*kg)/i)?.[0] || 0),
+                videoUrl: exercise.videoUrl || '',
+                thumbnailUrl: exercise.thumbnailUrl || '',
+                content: exercise.content,
+                scheduledAt: exercise.scheduledAt,
+                estimatedMinutes: Number(exercise.estimatedMinutes || 0),
                 meta: [
                   `${exercise.targetValue}${exercise.targetUnit === 'SECONDS' ? '초' : exercise.targetUnit === 'MINUTES' ? '분' : '회'}`,
                   `${exercise.sets || 1}세트`,
@@ -81,7 +98,7 @@ function routineDaysFromApi(detail, tab) {
   }))
 }
 
-export default function RoutineDetail({ routine, onBack, onDelete }) {
+export default function RoutineDetail({ routine, onBack, onDelete, onOpenDay }) {
   const [detail, setDetail] = useState(null)
   const [activeTab, setActiveTab] = useState(isMealRoutine(routine) ? 'meal' : 'exercise')
   const [expandedDays, setExpandedDays] = useState(new Set())
@@ -114,6 +131,48 @@ export default function RoutineDetail({ routine, onBack, onDelete }) {
       else next.add(dayId)
       return next
     })
+  }
+
+  function openDay(day) {
+    const viewOnly = day.scheduledDate !== localDateKey()
+    if (activeTab === 'meal') {
+      const dayMeals = day.items.map((meal) => ({
+        id: meal.id,
+        routineItemId: meal.routineItemId,
+        routineItemIds: meal.routineItemIds,
+        activityType: 'MEAL',
+        routineId: detail?.id || routine.id,
+        routineTitle: detail?.title || routine.title,
+        scheduledDate: day.scheduledDate,
+        dayNumber: day.dayNumber,
+        type: meal.mealType,
+        title: meal.name,
+        detail: `${Number(meal.details?.calories || 0).toLocaleString()} kcal`,
+        foods: meal.foods,
+        details: meal.details,
+      }))
+      if (dayMeals.length) onOpenDay?.({ ...dayMeals[0], dayMeals }, viewOnly)
+      return
+    }
+
+    const exercises = day.items
+    if (!exercises.length) return
+    const activityType = exercises.every((exercise) => exercise.activityType === 'REHABILITATION')
+      ? 'REHABILITATION'
+      : 'EXERCISE'
+    onOpenDay?.({
+      id: `routine-${detail?.id || routine.id}-day-${day.id}-movement`,
+      routineItemId: exercises[0].exerciseId,
+      routineItemIds: exercises.map((exercise) => exercise.exerciseId),
+      activityType,
+      routineId: detail?.id || routine.id,
+      routineTitle: detail?.title || routine.title,
+      scheduledDate: day.scheduledDate,
+      dayNumber: day.dayNumber,
+      type: activityType === 'REHABILITATION' ? '재활' : '운동',
+      title: detail?.title || routine.title,
+      exercises,
+    }, viewOnly)
   }
 
   if (!routine) return null
@@ -162,7 +221,7 @@ export default function RoutineDetail({ routine, onBack, onDelete }) {
                 </div>
               ))}
             </div>}
-            {isExpanded && <button type="button" className="routine-day-detail">{displayNumber}{displayUnit} 자세히 보기 <span>›</span></button>}
+            {isExpanded && <button type="button" className="routine-day-detail" onClick={() => openDay(day)}>{displayNumber}{displayUnit} 자세히 보기 <span>›</span></button>}
           </article>
         )})}
       </div>

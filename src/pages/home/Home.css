@@ -341,8 +341,25 @@
   width: 100%;
 }
 
+.today-primary-content {
+  display: flex;
+  width: 100%;
+  padding: 0;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+.today-primary-content:disabled { cursor: default; }
+
 .today-card.primary h2,
 .today-card.primary > p,
+.today-card.primary .today-primary-content > p,
 .today-card.primary .routine-start-button,
 .today-card.primary .routine-pass-button {
   margin: 0;

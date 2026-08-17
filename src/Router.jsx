@@ -14,6 +14,7 @@ import RoutineSelection from './pages/onboarding/RoutineSelection'
 import RoutineLoading from './pages/onboarding/RoutineLoading'
 import RoutineStopped from './pages/onboarding/RoutineStopped'
 import PlaceholderPage from './pages/placeholder/PlaceholderPage'
+import CommunityPage from './pages/community/CommunityPage'
 import RoutineSession from './pages/home/RoutineSession'
 import TodayReport from './pages/home/TodayReport'
 import AiRoutineChat from './pages/home/AiRoutineChat'
@@ -48,6 +49,7 @@ export default function Router() {
   const [selectedRoutine, setSelectedRoutine] = useState(null)
   const [routineSession, setRoutineSession] = useState(null)
   const [routineSessionViewOnly, setRoutineSessionViewOnly] = useState(false)
+  const [routineSessionBackPage, setRoutineSessionBackPage] = useState('home')
   const [routineStatuses, setRoutineStatuses] = useState({})
   const [routineCalories, setRoutineCalories] = useState({})
   const [exerciseResults, setExerciseResults] = useState({})
@@ -119,14 +121,16 @@ export default function Router() {
           />
         )}
 
-        {page === 'goal' && <Goal onNext={() => {
+        {page === 'goal' && <Goal onGoHome={() => {
+          setIsRoutineReset(false)
+          setPage('home')
+        }} onNext={() => {
           setHealthDataBackPage('goal')
           setPage('health-data')
         }} />}
 
         {page === 'health-data' && (
           <HealthData
-            onBack={() => setPage(healthDataBackPage)}
             allowSkip={isRoutineReset}
             onBack={() => setPage('goal')}
             onNext={(data) => {
@@ -202,7 +206,11 @@ export default function Router() {
           <Home
             initialSelectedDate={homeInitialDate}
             onDateOverrideConsumed={() => setHomeInitialDate(null)}
-            onCreateRoutine={() => setPage('health-data')}
+            onCreateRoutine={() => {
+              setIsRoutineReset(false)
+              setHealthDataBackPage('goal')
+              setPage('goal')
+            }}
             onOpenNotifications={(items, selectedDate) => {
               setTodayReportItems(items)
               setReportDate(selectedDate)
@@ -228,6 +236,7 @@ export default function Router() {
             onStartRoutine={(item, viewOnly = false) => {
               setRoutineSession(item)
               setRoutineSessionViewOnly(viewOnly)
+              setRoutineSessionBackPage('home')
               setPage('routine-session')
             }}
             onOpenRoutine={(routine) => {
@@ -281,12 +290,12 @@ export default function Router() {
             item={routineSession}
             viewOnly={routineSessionViewOnly}
             onDecision={saveRoutineStatus}
-            onClose={() => setPage('home')}
+            onClose={() => setPage(routineSessionBackPage)}
           />
         )}
 
         {page === 'community' && (
-          <PlaceholderPage page={page} onNavigate={setPage} onOpenAi={() => openAiChat('community')} />
+          <CommunityPage profile={profile} onNavigate={setPage} />
         )}
 
         {page === 'analysis' && <AnalysisLab onNavigate={(nextPage) => {
@@ -333,7 +342,7 @@ export default function Router() {
 
         {page === 'payment-complete' && <PaymentComplete onBack={() => setPage('market')} />}
 
-        {page === 'my' && <MyPage initialProfile={profile} onNavigate={setPage} onResetRoutine={() => {
+        {page === 'my' && <MyPage initialProfile={profile} onNavigate={setPage} onOpenAi={() => openAiChat('my')} onResetRoutine={() => {
           setIsRoutineReset(true)
           setPage('goal')
         }} onLoggedOut={() => {
@@ -350,6 +359,12 @@ export default function Router() {
           <RoutineDetail
             routine={selectedRoutine}
             onBack={() => setPage('home')}
+            onOpenDay={(item, viewOnly) => {
+              setRoutineSession(item)
+              setRoutineSessionViewOnly(viewOnly)
+              setRoutineSessionBackPage('routine-detail')
+              setPage('routine-session')
+            }}
             onDelete={(routineId) => {
               const hiddenIds = new Set(JSON.parse(localStorage.getItem('renewHiddenRoutineIds') || '[]').map(String))
               hiddenIds.add(String(routineId))

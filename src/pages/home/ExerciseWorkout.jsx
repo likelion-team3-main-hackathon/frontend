@@ -39,7 +39,12 @@ export default function ExerciseWorkout({ exercises, initialProgress, onExit, on
       setPhase('complete')
       return
     }
-    setSeconds(Math.max(0, Number(exercise.restSeconds || 0)))
+    const restSeconds = Math.max(0, Number(exercise.restSeconds || 0))
+    if (restSeconds === 0) {
+      afterRest()
+      return
+    }
+    setSeconds(restSeconds)
     setPhase('rest')
     setPaused(false)
   }

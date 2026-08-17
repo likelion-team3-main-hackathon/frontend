@@ -169,6 +169,17 @@
   background: #c7d4c0;
 }
 
+.temporary-home-button {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid #8eab82;
+  border-radius: 11px;
+  background: #ffffff;
+  color: #4e8b35;
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .skip-button {
   border: 0;
   background: transparent;

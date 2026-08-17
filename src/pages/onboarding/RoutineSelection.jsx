@@ -130,14 +130,16 @@ export default function RoutineSelection({ analysis, onComplete, onBack, onCance
       if (!generation.routineId) throw new Error('생성된 루틴 ID를 받지 못했습니다.')
 
       const routineResponse = await getRoutine(generation.routineId)
+      const hiddenIds = new Set(JSON.parse(localStorage.getItem('renewHiddenRoutineIds') || '[]').map(String))
+      hiddenIds.delete(String(generation.routineId))
       if (replacedRoutineIds.length) {
-        const hiddenIds = new Set(JSON.parse(localStorage.getItem('renewHiddenRoutineIds') || '[]').map(String))
         preservedRoutineIds.forEach((id) => hiddenIds.delete(String(id)))
         replacedRoutineIds.forEach((id) => {
           if (String(id) !== String(generation.routineId)) hiddenIds.add(String(id))
         })
-        localStorage.setItem('renewHiddenRoutineIds', JSON.stringify([...hiddenIds]))
       }
+      localStorage.setItem('renewHiddenRoutineIds', JSON.stringify([...hiddenIds]))
+      sessionStorage.setItem('latestGeneratedRoutineId', String(generation.routineId))
       onComplete?.(routineResponse?.data, resetMode)
     } catch (requestError) {
       if (requestError?.name !== 'AbortError') {

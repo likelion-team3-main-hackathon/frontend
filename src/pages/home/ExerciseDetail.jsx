@@ -18,7 +18,7 @@ export default function ExerciseDetail({ routineId, exercise, onBack, onSave, re
     setError('')
     const updated = { ...exercise, targetValue, sets, weightKg, restSeconds }
     try {
-      if (routineId && Number.isFinite(Number(exercise.exerciseId))) {
+      if (routineId && exercise.exerciseId != null && Number.isFinite(Number(exercise.exerciseId))) {
         await updateRoutineExercise(routineId, exercise.exerciseId, {
           targetValue,
           targetUnit: exercise.targetUnit || 'REPETITIONS',

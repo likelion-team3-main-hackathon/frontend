@@ -13,7 +13,7 @@ function numberFrom(text, keyword) {
 
 function initialFoods(item) {
   const supplied = item.foods || item.details?.foods
-  if (Array.isArray(supplied) && supplied.length) {
+  if (Array.isArray(supplied) && (supplied.length || item.isManualMeal)) {
     return supplied.map((food, index) => ({ id: food.id || `food-${index}`, ...food }))
   }
   if (Array.isArray(item.menu) && item.menu.length) {
@@ -36,7 +36,7 @@ function mealTypeCode(type) {
   return 'SNACK'
 }
 
-export default function MealRoutineSession({ item, onDecision, onClose, viewOnly = false }) {
+export default function MealRoutineSession({ item, onDecision, onClose, onMealUpdated, viewOnly = false, dayView = false }) {
   const [foods, setFoods] = useState(() => initialFoods(item))
   const [isAdding, setIsAdding] = useState(false)
   const [draft, setDraft] = useState(EMPTY_FOOD)
@@ -67,6 +67,7 @@ export default function MealRoutineSession({ item, onDecision, onClose, viewOnly
     setError('')
     try {
       await onDecision?.(item, 'completed', { foods, mealType: mealTypeCode(item.type), photoFile: photo?.file })
+      onMealUpdated?.({ ...item, foods, details: { ...item.details, foods, ...totals }, detail: `${totals.calories} kcal` })
       onClose?.()
     } catch (requestError) {
       setError(requestError.message || '식단 기록을 저장하지 못했어요.')
@@ -77,8 +78,7 @@ export default function MealRoutineSession({ item, onDecision, onClose, viewOnly
   const selectedFood = foods.find((food) => food.id === selectedFoodId)
   if (view === 'camera') return <MealCamera onClose={() => setView('list')} onUsePhoto={(captured) => {
     setPhoto(captured)
-    setFoods((current) => current.map((food) => ({ ...food, autoRecognized: true })))
-    setRecognitionNotice('사진을 촬영했어요. 인식된 음식 목록을 확인해주세요.')
+    setRecognitionNotice('사진을 첨부했어요. 음식 인식 API가 연결되면 분석 결과로 목록이 갱신돼요.')
     setView('list')
   }} />
   if (view === 'detail' && selectedFood) return <MealFoodDetail readOnly={viewOnly} food={selectedFood} photoUrl={photo?.url || ''} routineId={item.routineId || item.id} onBack={() => setView('list')} onSave={(updatedFood) => {
@@ -94,7 +94,7 @@ export default function MealRoutineSession({ item, onDecision, onClose, viewOnly
     <section className="meal-session-page">
       <header className="meal-session-header">
         <button type="button" onClick={onClose} aria-label="뒤로 가기">‹</button>
-        <h1>{item.routineTitle || '식단 루틴'} {item.dayNumber || 1}일차</h1>
+        <h1>{dayView ? (item.type || '식사') : `${item.routineTitle || '식단 루틴'} ${item.dayNumber || 1}일차`}</h1>
       </header>
 
       <button type="button" className="meal-photo-card" disabled={viewOnly} onClick={() => setView('camera')} style={photo?.url ? { backgroundImage: `url(${photo.url})` } : undefined}>
@@ -105,7 +105,7 @@ export default function MealRoutineSession({ item, onDecision, onClose, viewOnly
       <div className="meal-food-list">
         {foods.map((food) => (
           <button type="button" className="meal-food-card" key={food.id} onClick={() => { setSelectedFoodId(food.id); setView('detail') }}>
-            <div><strong>{item.type} {food.name}</strong><span>›</span></div>
+            <div><strong>{food.name}</strong><span>›</span></div>
             <div><b>{Number(food.calories || 0).toLocaleString()} kcal</b><small>탄 {food.carbs || 0}　단 {food.protein || 0}　지 {food.fat || 0}</small></div>
           </button>
         ))}
