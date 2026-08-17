@@ -16,16 +16,22 @@ const MENU_ITEMS = [
   { icon: '⊙', label: '알림 설정', value: '' },
 ]
 
-export default function MyPage({ initialProfile, onNavigate, onResetRoutine, onLoggedOut, onOpenAi }) {
+export default function MyPage({ initialProfile, onNavigate, onResetRoutine, onLoggedOut, onOpenAi, onNicknameChange }) {
   const [profile, setProfile] = useState(initialProfile)
   const [routines, setRoutines] = useState([])
   const [healthDocumentCount, setHealthDocumentCount] = useState(0)
+  const [isNicknameOpen, setIsNicknameOpen] = useState(false)
+  const [nicknameDraft, setNicknameDraft] = useState(initialProfile?.name || '')
 
   useEffect(() => {
     let active = true
     Promise.allSettled([getMyProfile(), getRoutines(), getHealthDocuments(0, 1)]).then(([profileResult, routineResult, documentResult]) => {
       if (!active) return
-      if (profileResult.status === 'fulfilled') setProfile(profileResult.value?.data || initialProfile)
+      if (profileResult.status === 'fulfilled') {
+        const fetchedProfile = profileResult.value?.data || initialProfile
+        const savedNickname = localStorage.getItem('renewNickname')?.trim()
+        setProfile(savedNickname ? { ...fetchedProfile, name: savedNickname, nickname: savedNickname } : fetchedProfile)
+      }
       if (routineResult.status === 'fulfilled') setRoutines(routineResult.value?.data?.content || [])
       if (documentResult.status === 'fulfilled') setHealthDocumentCount(Number(documentResult.value?.data?.totalElements || 0))
     })
@@ -44,6 +50,21 @@ export default function MyPage({ initialProfile, onNavigate, onResetRoutine, onL
     onLoggedOut?.()
   }
 
+  function openNicknameEditor() {
+    setNicknameDraft(profile?.name || '')
+    setIsNicknameOpen(true)
+  }
+
+  function saveNickname(event) {
+    event.preventDefault()
+    const nickname = nicknameDraft.trim()
+    if (!nickname) return
+    localStorage.setItem('renewNickname', nickname)
+    setProfile((current) => ({ ...current, name: nickname, nickname }))
+    onNicknameChange?.(nickname)
+    setIsNicknameOpen(false)
+  }
+
   return (
     <section className="my-page">
       <div className="my-page-scroll">
@@ -53,7 +74,7 @@ export default function MyPage({ initialProfile, onNavigate, onResetRoutine, onL
           <div className="my-profile-main">
             <span className="my-avatar">{profile?.profileImageUrl ? <img src={profile.profileImageUrl} alt="" /> : <img src={smileIcon} alt="" />}</span>
             <div><strong>{profile?.name || '사용자'}</strong><small>{handle}</small></div>
-            <em>{Math.max(1, stats.active)}일 연속</em><b>›</b>
+            <em>{Math.max(1, stats.active)}일 연속</em><button type="button" className="nickname-edit-button" onClick={openNicknameEditor}>닉네임 바꾸기</button>
           </div>
           <div className="my-credit-row"><span><small>보유 크레딧</small><strong>2,400 <i>C</i></strong></span><span><small>이번 주 적립</small><strong>+300</strong></span></div>
           <div className="my-stat-row"><span><strong>{stats.total}</strong><small>진행 루틴</small></span><span><strong>{stats.completed}</strong><small>완료 운동</small></span><span><strong>72</strong><small>웰니스 지수</small></span><span><strong>14</strong><small>친구</small></span></div>
@@ -66,6 +87,7 @@ export default function MyPage({ initialProfile, onNavigate, onResetRoutine, onL
         <button type="button" className="routine-reset-card" onClick={onResetRoutine}><i>↻</i><span><strong>루틴 재설정</strong><small>목표와 건강 정보를 다시 설정해요</small></span><b>›</b></button>
         <button type="button" className="my-logout-card" onClick={handleLogout}><i>↪</i><span><strong>로그아웃</strong><small>현재 계정에서 로그아웃해요</small></span><b>›</b></button>
       </div>
+      {isNicknameOpen && <div className="nickname-modal" role="dialog" aria-modal="true" aria-labelledby="nickname-modal-title" onMouseDown={(event) => { if (event.target === event.currentTarget) setIsNicknameOpen(false) }}><form onSubmit={saveNickname}><header><strong id="nickname-modal-title">변경하실 닉네임을 적어주세요</strong><button type="button" onClick={() => setIsNicknameOpen(false)} aria-label="닫기">×</button></header><div className="nickname-input-wrap"><input value={nicknameDraft} maxLength={20} onChange={(event) => setNicknameDraft(event.target.value)} placeholder="변경하실 닉네임…" autoFocus />{nicknameDraft && <button type="button" onClick={() => setNicknameDraft('')} aria-label="입력 지우기">×</button>}</div><button type="submit" className="nickname-confirm-button" disabled={!nicknameDraft.trim()}>확인</button></form></div>}
       <BottomNav active="my" onNavigate={onNavigate} />
     </section>
   )

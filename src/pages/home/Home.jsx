@@ -133,6 +133,21 @@ function mealFirst(items) {
   return [...items].sort((left, right) => Number(isMealActivity(right)) - Number(isMealActivity(left)))
 }
 
+function routineContainsMeal(routine) {
+  if (routine?.type === 'MEAL' || routine?.category === 'MEAL') return true
+  if (/식단|식사/.test(routine?.title || '')) return true
+  return (routine?.days || []).some((day) => (day.sections || []).some((section) =>
+    (section.exercises || []).some((exercise) => exercise.activityType === 'MEAL'),
+  ))
+}
+
+function mealRoutineFirst(routines) {
+  return routines
+    .map((routine, index) => ({ routine, index }))
+    .sort((left, right) => Number(routineContainsMeal(right.routine)) - Number(routineContainsMeal(left.routine)) || left.index - right.index)
+    .map(({ routine }) => routine)
+}
+
 function statusForItem(item, statuses) {
   if (statuses[item.id]) return statuses[item.id]
   const ids = item.routineItemIds || [item.routineItemId]
@@ -173,6 +188,7 @@ export default function Home({
 }) {
   const statusesLoadedRef = useRef(onStatusesLoaded)
   const weekSliderRef = useRef(null)
+  const routineSliderRef = useRef(null)
   statusesLoadedRef.current = onStatusesLoaded
   const initialDateRef = useRef(initialSelectedDate)
   const todayKey = localDateKey(new Date())
@@ -193,6 +209,12 @@ export default function Home({
   const [isHealthAppLinked, setIsHealthAppLinked] = useState(false)
   const [selectedRecords, setSelectedRecords] = useState([])
   const [dateStatuses, setDateStatuses] = useState({})
+
+  useEffect(() => {
+    setRoutineSlide(0)
+    const slider = routineSliderRef.current
+    if (slider) slider.scrollTo({ left: 0, behavior: 'auto' })
+  }, [activeRoutines.length, activeRoutines[0]?.id])
 
   useEffect(() => {
     if (initialDateRef.current) onDateOverrideConsumed?.()
@@ -222,7 +244,7 @@ export default function Home({
       const allList = routines.value?.data?.content || []
       const list = allList.filter((routine) => !hiddenRoutineIds.has(String(routine.id)))
       setIsApiConnected(true)
-      setActiveRoutines(list.map(routineSummary))
+      setActiveRoutines(mealRoutineFirst(list.map(routineSummary)))
       if (allList.length === 0) {
         setRoutineDetails([])
         return
@@ -231,10 +253,10 @@ export default function Home({
       if (active) {
         const detailList = details.filter((result) => result.status === 'fulfilled').map((result) => result.value.data)
         setRoutineDetails(detailList)
-        setActiveRoutines(list.map((routine) => {
+        setActiveRoutines(mealRoutineFirst(list.map((routine) => {
           const detail = detailList.find((item) => String(item.id) === String(routine.id))
           return routineSummary(detail ? { ...routine, ...detail } : routine)
-        }))
+        })))
       }
     })
     return () => { active = false }
@@ -388,8 +410,13 @@ export default function Home({
           )}
           <div
             className="active-routine-slider"
+            ref={routineSliderRef}
             onScroll={(event) => {
               const slider = event.currentTarget
+              if (!activeRoutines.length) {
+                setRoutineSlide(0)
+                return
+              }
               const cardWidth = slider.firstElementChild?.getBoundingClientRect().width || slider.clientWidth
               setRoutineSlide(Math.max(0, Math.min(activeRoutines.length - 1, Math.round(slider.scrollLeft / (cardWidth + 10)))))
             }}

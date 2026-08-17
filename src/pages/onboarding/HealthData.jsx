@@ -82,7 +82,7 @@ export default function HealthData({ onNext, onBack, allowSkip = false }) {
     <section className="health-data-page">
       <header className="health-data-header">
         <button type="button" className="health-back-button" onClick={onBack} aria-label="뒤로 가기">‹</button>
-        <div className="health-progress-track"><span /></div><span>8 / 8</span>
+        <div className="health-progress-track"><span /></div><span>9 / 9</span>
       </header>
 
       <div className="health-data-content">

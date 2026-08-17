@@ -28,6 +28,11 @@
 
 .mobile-frame > section::-webkit-scrollbar { display: none; }
 
+.mobile-frame > .health-analysis-page {
+  height: 100%;
+  overflow: hidden;
+}
+
 .mobile-frame > :is(
   .home-page,
   .analysis-lab-page,
