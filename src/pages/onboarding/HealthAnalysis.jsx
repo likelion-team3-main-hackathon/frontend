@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { createHealthAnalysis, getLatestHealthAnalysis, waitForHealthAnalysis } from '../../api/health'
+import RoutineLoading from './RoutineLoading'
 import './HealthAnalysis.css'
 
 const analysisCreationRequests = new Map()
@@ -12,11 +13,26 @@ const GOAL_LABELS = {
 
 function applyCurrentGoal(analysis) {
   try {
-    const goal = JSON.parse(sessionStorage.getItem('onboardingDraft') || '{}')?.goal
+    const draft = JSON.parse(sessionStorage.getItem('onboardingDraft') || '{}')
+    const goal = draft?.goal
     if (!goal) return analysis
+    const currentWeight = Number(draft?.weightKg)
+    const targetWeight = Number(draft?.targetWeightKg)
+    const weightDifference = currentWeight - targetWeight
+    const formattedDifference = Number.isInteger(Math.abs(weightDifference))
+      ? String(Math.abs(weightDifference))
+      : Math.abs(weightDifference).toFixed(1)
+    const weightGoal = Number.isFinite(weightDifference) && currentWeight > 0 && targetWeight > 0
+      ? weightDifference > 0
+        ? `${formattedDifference}kg 감량`
+        : weightDifference < 0
+          ? `${formattedDifference}kg 증량`
+          : '현재 몸무게 유지'
+      : ''
+    const description = [GOAL_LABELS[goal] || goal, weightGoal].filter(Boolean).join(', ')
     return {
       ...analysis,
-      goals: [{ type: goal, description: GOAL_LABELS[goal] || goal }],
+      goals: [{ type: goal, description }],
     }
   } catch {
     return analysis
@@ -105,7 +121,7 @@ export default function HealthAnalysis({ healthDocuments, onNext, onBack, onRetu
         sessionStorage.setItem('latestAnalysisId', String(analysisId))
         setStatus('건강 정보를 분석하고 있어요…')
         const result = await waitForHealthAnalysis(analysisId, controller.signal)
-        setAnalysis(result)
+        setAnalysis(applyCurrentGoal(result))
         setStatus('분석 완료')
       } catch (requestError) {
         if (requestError?.name !== 'AbortError') {
@@ -124,6 +140,10 @@ export default function HealthAnalysis({ healthDocuments, onNext, onBack, onRetu
   }, [healthDocuments])
 
   const items = getAnalysisItems(analysis)
+
+  if (!analysis && !error) {
+    return <RoutineLoading message={status} />
+  }
 
   return (
     <section className="health-analysis-page">

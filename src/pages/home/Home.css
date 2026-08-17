@@ -577,10 +577,12 @@
 }
 
 .condition-title strong {
-  font-size: 12px;
+  font-size: 14px;
+  font-weight: 800;
 }.condition-title small {
-  color: #858b82;
-  font-size: 9px;
+  color: #8B8878;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .condition-title button {
@@ -590,13 +592,13 @@
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: #f0f0e8;
-  color: #64705e;
+  background: #F4F1E7;
+  color: #5F6B54;
 }
 
 .condition-title button + button {
   margin-left: 0;
-  background: #4f8b37;
+  background: #35802B;
   color: #fff;
 }
 
@@ -636,7 +638,7 @@
   background: #fff;
 }.water-glasses i.filled {
   border-color: #9fc47e;
-  background: #9fc47e;
+  background: #8FBF6A;
 }
 
 .condition-card > p {
@@ -650,8 +652,9 @@
   padding: 4px 7px;
   border-radius: 99px;
   background: #edf5e5;
-  color: #67984f;
-  font-size: 8px;
+  color: #4A7C36;
+  font-size: 11px;
+  font-weight: 700;
   font-style: normal;
 }
 
@@ -662,8 +665,8 @@
   padding: 4px 7px;
   border-radius: 99px;
   background: #edf5e5;
-  color: #67984f;
-  font-size: 8px;
+  color: #4A7C36;
+  font-size: 11px;
   white-space: nowrap;
 }
 
@@ -691,9 +694,9 @@
   justify-content: space-between;
   margin-top: 5px;
   color: #9c9d98;
-  font-size: 7px;
+  font-size: 11px;
 }.sleep-labels strong {
-  color: #6e6391;
+  color: #6B5A93;
 }
 
 .sleep-times {
@@ -703,10 +706,11 @@
   margin-top: 10px;
 }.sleep-times span {
   padding: 8px;
-  border-radius: 8px;
+  border-radius: 12px;
   background: #f3f2ec;
-  color: #71786d;
-  font-size: 9px;
+  color: #5F6B54;
+  font-weight: 700;
+  font-size: 13px;
   text-align: center;
 }.sleep-times span:last-child {
   color: #518d3e;
@@ -715,25 +719,27 @@
 .coaching-card {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 12px;
   margin: 10px 0;
-  padding: 12px;
+  padding: 14px;
   border-radius: 12px;
   background: #fff3e4;
 }.coaching-card span {
   display: grid;
-  width: 19px;
-  height: 19px;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
   place-items: center;
   border-radius: 50%;
   background: #dc913e;
   color: #fff;
-  font-size: 10px;
+  font-size: 17px;
+  font-weight: 800;
 }.coaching-card p {
   margin: 0;
-  color: #81776a;
-  font-size: 9px;
-  line-height: 1.5;
+  color: #6E5836;
+  font-size: 10px;
+  line-height: 18px;
 }
 
 .research-note {

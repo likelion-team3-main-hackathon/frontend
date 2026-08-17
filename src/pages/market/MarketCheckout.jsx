@@ -20,7 +20,7 @@ export default function MarketCheckout({ order, onBack, onComplete }) {
   useEffect(() => {
     getMyProfile().then((response) => {
       const profile = response?.data || {}
-      setUserName(profile.name || profile.nickname || profile.username || '정우정')
+      setUserName(localStorage.getItem('renewNickname')?.trim() || profile.name || profile.nickname || profile.username || '정우정')
     }).catch(() => {})
   }, [])
 

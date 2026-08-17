@@ -20,7 +20,6 @@ export default function AnalysisResult({ analysis, onConfirm, onLater, onBack })
 
   return (
     <section className="analysis-result-page">
-      <button type="button" className="onboarding-page-back" onClick={onBack} aria-label="직전 페이지로 돌아가기">‹</button>
       <div className="routine-preparing-background">
         <h1>
           루틴을 준비하고

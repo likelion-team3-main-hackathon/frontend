@@ -73,12 +73,26 @@ export default function RoutineSelection({ analysis, onComplete, onBack, onCance
     }
     if (isReset) {
       setResetPrompt({
+        stage: selected.some(isMealRecommendation) ? 'meal' : 'exercise',
         hasMeal: selected.some(isMealRecommendation),
         hasExercise: selected.some((item) => !isMealRecommendation(item)),
       })
       return
     }
     generateRoutine('initial')
+  }
+
+  function confirmMealReplacement() {
+    if (resetPrompt?.hasExercise) {
+      setResetPrompt((current) => ({ ...current, stage: 'exercise', mealMode: 'meal-replace' }))
+      return
+    }
+    generateRoutine('meal-replace')
+  }
+
+  function confirmExerciseMode(mode) {
+    const mealMode = resetPrompt?.mealMode
+    generateRoutine([mealMode, `exercise-${mode}`].filter(Boolean).join('_'))
   }
 
   async function generateRoutine(resetMode) {
@@ -209,20 +223,20 @@ export default function RoutineSelection({ analysis, onComplete, onBack, onCance
       {resetPrompt && (
         <div className="routine-reset-modal-backdrop" role="presentation" onClick={() => setResetPrompt(null)}>
           <section className="routine-reset-modal" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
-            <h2>{resetPrompt.hasMeal ? '식단 루틴은 변경만 가능해요' : '운동 루틴을 어떻게 적용할까요?'}</h2>
-            <p>{resetPrompt.hasMeal
-              ? `해당 루틴은 식단이 겹쳐 다른 루틴들과 합쳐질 수 없습니다. 기존 식단 루틴은 선택한 루틴으로 변경됩니다.${resetPrompt.hasExercise ? ' 운동 루틴은 추가하거나 변경할 수 있어요.' : ''}`
+            <h2>{resetPrompt.stage === 'meal' ? '식단 루틴은 변경만 가능해요' : '운동 루틴을 어떻게 적용할까요?'}</h2>
+            <p>{resetPrompt.stage === 'meal'
+              ? '해당 루틴은 식단이 겹쳐 다른 루틴들과 합쳐질 수 없습니다. 기존 식단 루틴을 선택한 루틴으로 변경하시겠습니까?'
               : '현재 운동 루틴에 새 루틴을 추가하거나, 기존 운동 루틴을 선택한 루틴으로 변경할 수 있어요.'}</p>
             <div>
-              {resetPrompt.hasExercise ? (
+              {resetPrompt.stage === 'exercise' ? (
                 <>
-                  <button type="button" onClick={() => generateRoutine(resetPrompt.hasMeal ? 'meal-replace_exercise-add' : 'exercise-add')}>운동 추가</button>
-                  <button type="button" className="primary" onClick={() => generateRoutine(resetPrompt.hasMeal ? 'meal-replace_exercise-replace' : 'exercise-replace')}>운동 변경</button>
+                  <button type="button" onClick={() => confirmExerciseMode('add')}>운동 추가</button>
+                  <button type="button" className="primary" onClick={() => confirmExerciseMode('replace')}>운동 변경</button>
                 </>
               ) : (
-                <button type="button" className="primary" onClick={() => generateRoutine('meal-replace')}>변경</button>
+                <button type="button" className="primary" onClick={confirmMealReplacement}>식단 변경</button>
               )}
-              {resetPrompt.hasMeal && <button type="button" onClick={() => setResetPrompt(null)}>취소</button>}
+              {resetPrompt.stage === 'meal' && <button type="button" onClick={() => setResetPrompt(null)}>취소</button>}
             </div>
           </section>
         </div>

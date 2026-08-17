@@ -40,6 +40,12 @@ function pageForProfile(profile) {
   return 'home'
 }
 
+function withSavedNickname(profile) {
+  if (!profile) return profile
+  const nickname = localStorage.getItem('renewNickname')?.trim()
+  return nickname ? { ...profile, name: nickname, nickname } : profile
+}
+
 export default function Router() {
   const [page, setPage] = useState(hasAccessToken() ? 'loading' : 'login')
   const [profile, setProfile] = useState(null)
@@ -101,7 +107,7 @@ export default function Router() {
 
     getMyProfile()
       .then((response) => {
-        setProfile(response?.data || null)
+        setProfile(withSavedNickname(response?.data || null))
         setPage(pageForProfile(response?.data))
       })
       .catch(() => setPage('login'))
@@ -121,10 +127,13 @@ export default function Router() {
           />
         )}
 
-        {page === 'goal' && <Goal onGoHome={() => {
-          setIsRoutineReset(false)
-          setPage('home')
-        }} onNext={() => {
+        {page === 'goal' && <Goal onBack={() => {
+          if (isRoutineReset) {
+            setIsRoutineReset(false)
+            setPage('home')
+          } else setPage('health-consent')
+        }} onNext={(onboarding) => {
+          setProfile((current) => ({ ...current, name: onboarding.name, nickname: onboarding.name }))
           setHealthDataBackPage('goal')
           setPage('health-data')
         }} />}
@@ -342,7 +351,7 @@ export default function Router() {
 
         {page === 'payment-complete' && <PaymentComplete onBack={() => setPage('market')} />}
 
-        {page === 'my' && <MyPage initialProfile={profile} onNavigate={setPage} onOpenAi={() => openAiChat('my')} onResetRoutine={() => {
+        {page === 'my' && <MyPage initialProfile={profile} onNavigate={setPage} onOpenAi={() => openAiChat('my')} onNicknameChange={(nickname) => setProfile((current) => ({ ...current, name: nickname, nickname }))} onResetRoutine={() => {
           setIsRoutineReset(true)
           setPage('goal')
         }} onLoggedOut={() => {
