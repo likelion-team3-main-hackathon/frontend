@@ -7,11 +7,27 @@ import './MealRoutineSession.css'
 
 const EMPTY_FOOD = { name: '', calories: '', carbs: '', protein: '', fat: '', servingGrams: 100 }
 
+function numberFrom(text, keyword) {
+  const match = String(text || '').match(new RegExp(`${keyword}\\s*(\\d+)`, 'i'))
+  return match ? Number(match[1]) : 0
+}
+
 function initialFoods(item) {
   const supplied = item.foods || item.details?.foods
-  if (Array.isArray(supplied) && supplied.length) return supplied.map((food, index) => ({ id: food.id || `food-${index}`, ...food }))
-  if (Array.isArray(item.menu) && item.menu.length) return item.menu.map((name, index) => ({ id: `menu-${index}`, name, calories: 0, carbs: 0, protein: 0, fat: 0 }))
-  return [{ id: `routine-food-${item.id}`, name: item.title, calories: 0, carbs: 0, protein: 0, fat: 0 }]
+  if (Array.isArray(supplied) && (supplied.length || item.isManualMeal)) {
+    return supplied.map((food, index) => ({ id: food.id || `food-${index}`, ...food }))
+  }
+  if (Array.isArray(item.menu) && item.menu.length) {
+    return item.menu.map((name, index) => ({ id: `menu-${index}`, name, calories: 0, carbs: 0, protein: 0, fat: 0 }))
+  }
+  return [{
+    id: `routine-food-${item.id}`,
+    name: item.title,
+    calories: numberFrom(item.detail, 'kcal'),
+    carbs: numberFrom(item.detail, '탄(?:수화물)?'),
+    protein: numberFrom(item.detail, '단(?:백질)?'),
+    fat: numberFrom(item.detail, '지(?:방)?'),
+  }]
 }
 
 function mealTypeCode(type) {
@@ -21,7 +37,7 @@ function mealTypeCode(type) {
   return 'SNACK'
 }
 
-export default function MealRoutineSession({ item, onDecision, onClose }) {
+export default function MealRoutineSession({ item, onDecision, onClose, onMealUpdated, viewOnly = false, dayView = false }) {
   const [foods, setFoods] = useState(() => initialFoods(item))
   const [isAdding, setIsAdding] = useState(false)
   const [draft, setDraft] = useState(EMPTY_FOOD)
@@ -66,23 +82,24 @@ export default function MealRoutineSession({ item, onDecision, onClose }) {
     try {
       await onDecision?.(item, 'completed', { foods, mealType: mealTypeCode(item.type),
         photoFile: mealAnalysisId ? null : photo?.file, mealAnalysisId })
+      onMealUpdated?.({ ...item, foods, details: { ...item.details, foods, ...totals }, detail: `${totals.calories} kcal` })
       onClose?.()
     } catch (requestError) { setError(requestError.message || '식단 기록을 저장하지 못했어요.'); setIsSaving(false) }
   }
 
   const selectedFood = foods.find((food) => food.id === selectedFoodId)
   if (view === 'camera') return <MealCamera onClose={() => setView('list')} onUsePhoto={usePhoto} />
-  if (view === 'detail' && selectedFood) return <MealFoodDetail food={selectedFood} photoUrl={photo?.url || ''} routineId={item.routineId || item.id} onBack={() => setView('list')} onSave={(updatedFood) => { setFoods((current) => current.map((food) => food.id === updatedFood.id ? updatedFood : food)); setView('list') }} onDelete={() => { setFoods((current) => current.filter((food) => food.id !== selectedFood.id)); setSelectedFoodId(null); setView('list') }} />
+  if (view === 'detail' && selectedFood) return <MealFoodDetail readOnly={viewOnly} food={selectedFood} photoUrl={photo?.url || ''} routineId={item.routineId || item.id} onBack={() => setView('list')} onSave={(updatedFood) => { setFoods((current) => current.map((food) => food.id === updatedFood.id ? updatedFood : food)); setView('list') }} onDelete={() => { setFoods((current) => current.filter((food) => food.id !== selectedFood.id)); setSelectedFoodId(null); setView('list') }} />
 
   return <section className="meal-session-page">
-    <header className="meal-session-header"><button type="button" onClick={onClose} aria-label="뒤로 가기">‹</button><h1>{item.routineTitle || '식단 루틴'} {item.dayNumber || 1}일차</h1></header>
-    <button type="button" className="meal-photo-card" onClick={() => setView('camera')} style={photo?.url ? { backgroundImage: `url(${photo.url})` } : undefined}>{!photo?.url && <><img src={cameraIcon} alt="" /><small>사진 인증 및 분석</small></>}</button>
+    <header className="meal-session-header"><button type="button" onClick={onClose} aria-label="뒤로 가기">‹</button><h1>{dayView ? (item.type || '식사') : `${item.routineTitle || '식단 루틴'} ${item.dayNumber || 1}일차`}</h1></header>
+    <button type="button" className="meal-photo-card" disabled={viewOnly} onClick={() => setView('camera')} style={photo?.url ? { backgroundImage: `url(${photo.url})` } : undefined}>{!photo?.url && <><img src={cameraIcon} alt="" /><small>사진 인증 및 분석</small></>}</button>
     {recognitionNotice && <p className="meal-recognition-notice">{recognitionNotice}</p>}
     <div className="meal-food-list">{foods.map((food) => <button type="button" className="meal-food-card" key={food.id} onClick={() => { setSelectedFoodId(food.id); setView('detail') }}><div><strong>{food.name}</strong><span>›</span></div><div><b>{Number(food.calories || 0).toLocaleString()} kcal</b><small>탄 {food.carbs || 0}　단 {food.protein || 0}　지 {food.fat || 0}</small></div></button>)}</div>
     <div className="meal-total-card"><strong>합계 {totals.calories.toLocaleString()} kcal</strong><small>탄 {totals.carbs}　단 {totals.protein}　지 {totals.fat}</small></div>
     {isAdding && <form className="meal-add-form" onSubmit={addFood}><input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} placeholder="음식 이름" autoFocus /><div>{['calories','carbs','protein','fat'].map((field) => <input key={field} type="number" min="0" value={draft[field]} onChange={(e) => setDraft({ ...draft, [field]: e.target.value })} placeholder={{calories:'kcal',carbs:'탄수',protein:'단백질',fat:'지방'}[field]} />)}</div><footer><button type="button" onClick={() => setIsAdding(false)}>취소</button><button type="submit">추가</button></footer></form>}
-    {!isAdding && <button type="button" className="meal-add-button" aria-label="음식 추가" onClick={() => setIsAdding(true)}>＋</button>}
+    {!viewOnly && !isAdding && <button type="button" className="meal-add-button" aria-label="음식 추가" onClick={() => setIsAdding(true)}>＋</button>}
     {error && <p className="meal-session-error">{error}</p>}
-    <button type="button" className="meal-confirm-button" disabled={isSaving || isAnalyzing || foods.length === 0} onClick={confirm}>{isAnalyzing ? '분석 중…' : isSaving ? '저장 중…' : '확인'}</button>
+    <button type="button" className="meal-confirm-button" disabled={viewOnly || isSaving || isAnalyzing || foods.length === 0} onClick={viewOnly ? onClose : confirm}>{viewOnly ? '돌아가기' : isAnalyzing ? '분석 중…' : isSaving ? '저장 중…' : '확인'}</button>
   </section>
 }

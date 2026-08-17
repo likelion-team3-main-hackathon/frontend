@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { getDailyNutritionReport, getRoutineRecords } from '../../api/record'
 import BottomNav from '../../components/layout/BottomNav'
 import smileIcon from '../../assets/icons/smile_big.png'
+import sadIcon from '../../assets/icons/sad.png'
 import bellIcon from '../../assets/icons/bell.png'
 import { homeMockData } from '../../mocks/homeData'
 import './TodayReport.css'
@@ -13,6 +14,19 @@ const REPORT_CONFETTI = [
 
 function dateKey(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
+
+function oneDecimal(value) {
+  const number = Number(value || 0)
+  return (Math.round(number * 10) / 10).toLocaleString('ko-KR', { maximumFractionDigits: 1 })
+}
+
+const COMPLETION_MESSAGES = {
+  0: '오늘은 쉬어가는 하루였어요',
+  25: '오늘은 가볍게 마무리했어요',
+  50: '오늘 루틴의 절반을 해냈어요',
+  75: '오늘 계획을 대부분 해냈어요',
+  100: '오늘 루틴, 다 끝냈어요',
 }
 
 function detailsOf(record) {
@@ -53,6 +67,9 @@ export default function TodayReport({ items = [], statuses = {}, calories = {}, 
   const completed = items.filter((item) => statusForItem(item, statuses) === 'completed').length
   const decided = items.filter((item) => statusForItem(item, statuses)).length
   const allCompleted = items.length > 0 && completed === items.length
+  const completionRate = items.length ? completed / items.length * 100 : 0
+  const completionStep = Math.min(100, Math.max(0, Math.round(completionRate / 25) * 25))
+  const reportIcon = completionStep <= 25 ? sadIcon : smileIcon
   const sessionCalories = items.reduce((sum, item) => sum + Number(calories[item.id] || 0), 0)
 
   useEffect(() => {
@@ -101,7 +118,7 @@ export default function TodayReport({ items = [], statuses = {}, calories = {}, 
   const exerciseMinutes = resultValues.reduce((sum, result) => sum + Number(result.minutes || result.durationMinutes || 0), 0)
     || exercises.reduce((sum, item) => sum + Number(String(item.time).match(/\d+/)?.[0] || 0), 0)
   const burnedCalories = resultValues.reduce((sum, result) => sum + Number(result.calories || 0), 0)
-    || Math.round(exerciseMinutes * 9.1)
+    || exerciseMinutes * 9.1
   const weekday = ['일', '월', '화', '수', '목', '금', '토'][selectedDate.getDay()]
 
   return (
@@ -111,16 +128,16 @@ export default function TodayReport({ items = [], statuses = {}, calories = {}, 
         <div className="report-title"><h1>{isToday ? '오늘의 리포트' : `${selectedDate.getMonth() + 1}월 ${selectedDate.getDate()}일 리포트`}</h1><span>{selectedDate.getMonth() + 1}월 {selectedDate.getDate()}일 {weekday}요일</span></div>
 
         <article className="report-hero">
-          <div className="report-confetti" aria-hidden="true">{REPORT_CONFETTI.map(([left, delay, color], index) => <i className={color} style={{ left, animationDelay: delay }} key={index} />)}</div>
-          <img src={smileIcon} alt="" /><b>{completed} / {items.length} 완료</b>
-          <h2>{allCompleted ? '오늘 루틴, 다 끝냈어요' : '오늘도 잘 해내고 있어요'}</h2>
+          {completionStep === 100 && <div className="report-confetti" aria-hidden="true">{REPORT_CONFETTI.map(([left, delay, color], index) => <i className={color} style={{ left, animationDelay: delay }} key={index} />)}</div>}
+          <img src={reportIcon} alt="" /><b>{completed} / {items.length} 완료</b>
+          <h2>{COMPLETION_MESSAGES[completionStep]}</h2>
           <p>{streakDays > 0 ? `${streakDays}일차 연속 기록이에요.` : completed ? '오늘부터 연속 기록을 시작했어요.' : '첫 루틴부터 가볍게 시작해볼까요?'}</p>
           <small>{allCompleted ? '내일은 오늘 기록에 맞춰 조금 조정해볼까요?' : `현재 ${decided}/${items.length}개 활동을 확인했어요.`}</small>
         </article>
 
         <div className="report-metric-grid">
           <article className="report-meal-metric"><small>먹은 양</small><strong>{nutrients.calories.toLocaleString()} <em>kcal</em></strong><div><i /><i /><i /></div><p>탄 {nutrients.carbs}　 단 {nutrients.protein}　 지 {nutrients.fat}</p></article>
-          <article><small>운동</small><strong>{exerciseMinutes} <em>분</em></strong><b>{burnedCalories} kcal 소모</b><p>{completedExerciseCount}동작 완료</p></article>
+          <article><small>운동</small><strong>{Math.round(exerciseMinutes).toLocaleString('ko-KR')} <em>분</em></strong><b>{oneDecimal(burnedCalories)} kcal 소모</b><p>{completedExerciseCount}동작 완료</p></article>
           <article className="report-small-metric"><span>♢</span><div><small>물</small><strong>{water} / 8 잔</strong></div></article>
           <article className="report-small-metric"><span>☾</span><div><small>수면</small><strong>{isToday ? homeMockData.condition.sleep.total : '기록 없음'}</strong></div></article>
         </div>

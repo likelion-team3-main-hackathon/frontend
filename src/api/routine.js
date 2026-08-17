@@ -30,6 +30,24 @@ export function updateRoutineExercise(routineId, exerciseId, exercise) {
     body: exercise,
   })
 }
+
+export function addRoutineExercise(routineId, sectionId, exercise) {
+  return apiRequest(`/routines/${routineId}/sections/${sectionId}/exercises`, {
+    method: 'POST',
+    body: exercise,
+  })
+}
+
+export function deleteRoutineExercise(routineId, exerciseId) {
+  return apiRequest(`/routines/${routineId}/exercises/${exerciseId}`, { method: 'DELETE' })
+}
+
+export function updateRoutineExerciseOrder(routineId, sectionId, exerciseIds) {
+  return apiRequest(`/routines/${routineId}/sections/${sectionId}/exercise-order`, {
+    method: 'PUT',
+    body: { exerciseIds },
+  })
+}
 function wait(delayMs, signal) {
   return new Promise((resolve, reject) => {
     const timeoutId = window.setTimeout(resolve, delayMs)

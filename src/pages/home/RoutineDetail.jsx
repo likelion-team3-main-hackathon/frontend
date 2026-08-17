@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { getRoutine } from '../../api/routine'
 import exerciseIcon from '../../assets/icons/routine/exercise.png'
 import mealIcon from '../../assets/icons/routine/meal.png'
-import nextIcon from '../../assets/icons/next.png'
 import './RoutineDetail.css'
 
 function isMealRoutine(routine) {
@@ -19,6 +18,13 @@ function dateLabel(value) {
   return month && day ? `${Number(month)}월 ${Number(day)}일` : ''
 }
 
+function localDateKey(date = new Date()) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 function routineDaysFromApi(detail, tab) {
   return (detail?.days || []).map((day, index) => {
     const sections = day.sections || []
@@ -30,16 +36,33 @@ function routineDaysFromApi(detail, tab) {
           return tab === 'meal'
             ? {
                 id: exercise.exerciseId,
+                routineItemId: exercise.exerciseId,
+                routineItemIds: [exercise.exerciseId],
+                activityType: 'MEAL',
                 mealType: section.title?.replace(' 식단', '') || '식단',
                 name: exercise.name,
                 meta: `${Number(content.calories || exercise.targetValue || 0).toLocaleString()} kcal · 탄 ${content.carbohydrateGrams || 0} 단 ${content.proteinGrams || 0} 지 ${content.fatGrams || 0}`,
+                foods: content.foods || [],
+                details: content,
               }
             : {
                 id: exercise.exerciseId,
+                exerciseId: exercise.exerciseId,
+                activityType: exercise.activityType || 'EXERCISE',
                 sectionType: section.sectionType,
                 sectionTitle: section.title,
+                sectionId: section.sectionId,
                 name: exercise.name,
-                sets: exercise.sets || 1,
+                targetValue: Number(exercise.targetValue || 0),
+                targetUnit: exercise.targetUnit || 'REPETITIONS',
+                sets: Number(exercise.sets || 1),
+                restSeconds: Number(exercise.restSeconds || 0),
+                weightKg: Number(content.weightKg || content.weight || String(exercise.memo || '').match(/[\d.]+(?=\s*kg)/i)?.[0] || 0),
+                videoUrl: exercise.videoUrl || '',
+                thumbnailUrl: exercise.thumbnailUrl || '',
+                content: exercise.content,
+                scheduledAt: exercise.scheduledAt,
+                estimatedMinutes: Number(exercise.estimatedMinutes || 0),
                 meta: [
                   `${exercise.targetValue}${exercise.targetUnit === 'SECONDS' ? '초' : exercise.targetUnit === 'MINUTES' ? '분' : '회'}`,
                   `${exercise.sets || 1}세트`,
@@ -62,7 +85,7 @@ function routineDaysFromApi(detail, tab) {
       week: day.week,
       dayNumber: index + 1,
       scheduledDate: day.scheduledDate,
-      label: day.scheduledDate === new Date().toISOString().slice(0, 10) ? '오늘' : '',
+      label: day.scheduledDate === localDateKey() ? '오늘' : '',
       summary: focus,
       meta: tab === 'meal'
         ? `${items.length}끼 · ${calories.toLocaleString()} kcal`
@@ -75,7 +98,7 @@ function routineDaysFromApi(detail, tab) {
   }))
 }
 
-export default function RoutineDetail({ routine, onBack, onOpenAi }) {
+export default function RoutineDetail({ routine, onBack, onDelete, onOpenDay }) {
   const [detail, setDetail] = useState(null)
   const [activeTab, setActiveTab] = useState(isMealRoutine(routine) ? 'meal' : 'exercise')
   const [expandedDays, setExpandedDays] = useState(new Set())
@@ -110,6 +133,48 @@ export default function RoutineDetail({ routine, onBack, onOpenAi }) {
     })
   }
 
+  function openDay(day) {
+    const viewOnly = day.scheduledDate !== localDateKey()
+    if (activeTab === 'meal') {
+      const dayMeals = day.items.map((meal) => ({
+        id: meal.id,
+        routineItemId: meal.routineItemId,
+        routineItemIds: meal.routineItemIds,
+        activityType: 'MEAL',
+        routineId: detail?.id || routine.id,
+        routineTitle: detail?.title || routine.title,
+        scheduledDate: day.scheduledDate,
+        dayNumber: day.dayNumber,
+        type: meal.mealType,
+        title: meal.name,
+        detail: `${Number(meal.details?.calories || 0).toLocaleString()} kcal`,
+        foods: meal.foods,
+        details: meal.details,
+      }))
+      if (dayMeals.length) onOpenDay?.({ ...dayMeals[0], dayMeals }, viewOnly)
+      return
+    }
+
+    const exercises = day.items
+    if (!exercises.length) return
+    const activityType = exercises.every((exercise) => exercise.activityType === 'REHABILITATION')
+      ? 'REHABILITATION'
+      : 'EXERCISE'
+    onOpenDay?.({
+      id: `routine-${detail?.id || routine.id}-day-${day.id}-movement`,
+      routineItemId: exercises[0].exerciseId,
+      routineItemIds: exercises.map((exercise) => exercise.exerciseId),
+      activityType,
+      routineId: detail?.id || routine.id,
+      routineTitle: detail?.title || routine.title,
+      scheduledDate: day.scheduledDate,
+      dayNumber: day.dayNumber,
+      type: activityType === 'REHABILITATION' ? '재활' : '운동',
+      title: detail?.title || routine.title,
+      exercises,
+    }, viewOnly)
+  }
+
   if (!routine) return null
 
   return (
@@ -125,8 +190,6 @@ export default function RoutineDetail({ routine, onBack, onOpenAi }) {
         <div className="routine-weeks">{Array.from({ length: routine.totalWeeks }, (_, index) => <span className={index + 1 === routine.currentWeek ? 'current' : ''} key={index}>{index + 1}주</span>)}</div>
       </article>
 
-      <button type="button" className="routine-ai-summary" onClick={onOpenAi}>AI 요약 <img src={nextIcon} alt="" /></button>
-
       <div className="routine-type-tabs">
         <button type="button" className={activeTab === 'meal' ? 'active' : ''} onClick={() => setActiveTab('meal')}>식사 루틴</button>
         <button type="button" className={activeTab === 'exercise' ? 'active' : ''} onClick={() => setActiveTab('exercise')}>운동 루틴</button>
@@ -138,8 +201,8 @@ export default function RoutineDetail({ routine, onBack, onOpenAi }) {
         {detail && days.length === 0 && <p>이 루틴에는 {activeTab === 'meal' ? '식단' : '운동'} 일정이 없어요.</p>}
         {days.map((day) => {
           const isExpanded = expandedDays.has(day.id)
-          const displayNumber = activeTab === 'exercise' ? day.sequenceNumber : day.dayNumber
-          const displayUnit = activeTab === 'exercise' ? '회차' : '일차'
+          const displayNumber = day.dayNumber
+          const displayUnit = '일차'
           return (
           <article className={`routine-day-schedule ${isExpanded ? 'expanded' : 'collapsed'} ${day.label === '오늘' ? 'today' : ''}`} key={day.id}>
             <button type="button" className="routine-day-header" onClick={() => toggleDay(day.id)} aria-expanded={isExpanded}>
@@ -158,10 +221,17 @@ export default function RoutineDetail({ routine, onBack, onOpenAi }) {
                 </div>
               ))}
             </div>}
-            {isExpanded && <button type="button" className="routine-day-detail">{displayNumber}{displayUnit} 자세히 보기 <span>›</span></button>}
+            {isExpanded && <button type="button" className="routine-day-detail" onClick={() => openDay(day)}>{displayNumber}{displayUnit} 자세히 보기 <span>›</span></button>}
           </article>
         )})}
       </div>
+      <button
+        type="button"
+        className="routine-delete-button"
+        onClick={() => {
+          if (window.confirm('이 루틴을 목록에서 삭제할까요?')) onDelete?.(routine.id)
+        }}
+      >루틴 삭제하기</button>
     </section>
   )
 }

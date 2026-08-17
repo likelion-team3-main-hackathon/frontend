@@ -1,0 +1,58 @@
+.meal-day-page {
+  display: flex;
+  min-height: calc(100dvh - 48px);
+  flex-direction: column;
+  padding-bottom: 4px;
+  color: #293125;
+}
+
+.meal-day-header {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  gap: 8px;
+}
+
+.meal-day-header button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #293125;
+  font-size: 25px;
+}
+
+.meal-day-header h1 { margin: 0; font-size: 13px; font-weight: 600; }
+.meal-day-list { display: flex; flex-direction: column; gap: 9px; margin-top: 5px; }
+
+.meal-day-card {
+  width: 100%;
+  padding: 14px 15px;
+  border: 1px solid #eeeae1;
+  border-radius: 13px;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+.meal-day-card > div { display: flex; align-items: center; justify-content: space-between; }
+.meal-day-card > div + div { margin-top: 10px; }
+.meal-day-card strong { font-size: 12px; }
+.meal-day-card span { color: #a7aa9f; font-size: 18px; }
+.meal-day-card b { font-size: 11px; }
+.meal-day-card small { color: #858b80; font-size: 9px; }
+
+.meal-day-total {
+  display: flex;
+  margin-top: 9px;
+  padding: 13px 15px;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 11px;
+  background: #f2f0e8;
+}
+
+.meal-day-total strong { font-size: 11px; }
+.meal-day-total small { color: #858b80; font-size: 9px; }
+.meal-day-add { width: 38px; height: 38px; margin: 24px 3px 10px auto; border: 1px solid #dedfd9; border-radius: 50%; background: #fff; color: #4d5549; font-size: 22px; }
+.meal-day-confirm { width: 100%; min-height: 47px; margin-top: auto; border: 0; border-radius: 8px; background: #4e8b35; color: #fff; font-size: 12px; font-weight: 700; }

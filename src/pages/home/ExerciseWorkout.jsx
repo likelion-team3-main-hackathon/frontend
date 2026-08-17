@@ -39,8 +39,16 @@ export default function ExerciseWorkout({ exercises, initialProgress, onExit, on
   function advance() {
     const hasAnotherSet = setIndex + 1 < Math.max(1, exercise.sets)
     const hasAnotherExercise = exerciseIndex + 1 < exercises.length
-    if (!hasAnotherSet && !hasAnotherExercise) return setPhase('complete')
-    setSeconds(Math.max(0, Number(exercise.restSeconds || 0)))
+    if (!hasAnotherSet && !hasAnotherExercise) {
+      setPhase('complete')
+      return
+    }
+    const restSeconds = Math.max(0, Number(exercise.restSeconds || 0))
+    if (restSeconds === 0) {
+      afterRest()
+      return
+    }
+    setSeconds(restSeconds)
     setPhase('rest')
   }
 
