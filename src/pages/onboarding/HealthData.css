@@ -20,3 +20,9 @@
 .health-next-button { width: 100%; min-height: 52px; border: 0; border-radius: 11px; background: #4e8b35; color: #fff; font-size: 14px; font-weight: 700; }
 .health-next-button:disabled { background: #91ad85; cursor: wait; }
 .health-later-button { border: 0; background: transparent; color: #4f5749; font-size: 14px; }
+.health-picker-backdrop{position:absolute;z-index:40;inset:0;display:flex;align-items:flex-end;padding:16px;background:rgba(28,34,25,.32)}
+.health-picker-sheet{display:flex;width:100%;padding:18px;flex-direction:column;gap:9px;border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(32,40,28,.2);animation:health-picker-up .2s ease-out}
+.health-picker-sheet strong{margin-bottom:5px;color:#252d21;font-size:15px}
+.health-picker-sheet button{min-height:48px;border:0;border-radius:11px;background:#eaf3df;color:#4e8b35;font-size:13px;font-weight:800}
+.health-picker-sheet .health-picker-cancel{background:#f5f2eb;color:#777d73}
+@keyframes health-picker-up{from{transform:translateY(18px);opacity:0}to{transform:translateY(0);opacity:1}}

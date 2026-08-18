@@ -73,6 +73,7 @@ export default function Router() {
   const [isRoutineReset, setIsRoutineReset] = useState(false)
   const [homeInitialDate, setHomeInitialDate] = useState(null)
   const [creditToast, setCreditToast] = useState(null)
+  const [routineDataRevision, setRoutineDataRevision] = useState(0)
 
   function openCheckout(order, backPage) {
     setCheckoutOrder(order)
@@ -242,6 +243,7 @@ export default function Router() {
             initialSelectedDate={homeInitialDate}
             onDateOverrideConsumed={() => setHomeInitialDate(null)}
             creditToast={creditToast}
+            dataRevision={routineDataRevision}
             onCreateRoutine={() => {
               setIsRoutineReset(false)
               setHealthDataBackPage('goal')
@@ -306,7 +308,11 @@ export default function Router() {
           />
         )}
 
-        {page === 'ai-chat' && <AiRoutineChat onBack={() => setPage(aiChatBackPage)} />}
+        {page === 'ai-chat' && <AiRoutineChat onBack={() => setPage(aiChatBackPage)} onActionExecuted={() => {
+          setRoutineDataRevision((current) => current + 1)
+          window.setTimeout(() => setRoutineDataRevision((current) => current + 1), 2500)
+          window.setTimeout(() => setRoutineDataRevision((current) => current + 1), 6000)
+        }} />}
 
         {page === 'notifications' && (
           <NotificationPage
@@ -397,6 +403,7 @@ export default function Router() {
         {page === 'routine-detail' && (
           <RoutineDetail
             routine={selectedRoutine}
+            dataRevision={routineDataRevision}
             onBack={() => setPage('home')}
             onOpenDay={(item, viewOnly) => {
               setRoutineSession(item)

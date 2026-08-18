@@ -25,6 +25,8 @@ function localDateKey(date = new Date()) {
   return `${year}-${month}-${day}`
 }
 
+const TODAY_LABEL = '오늘'
+
 function routineDaysFromApi(detail, tab) {
   return (detail?.days || []).map((day, index) => {
     const sections = day.sections || []
@@ -85,7 +87,7 @@ function routineDaysFromApi(detail, tab) {
       week: day.week,
       dayNumber: index + 1,
       scheduledDate: day.scheduledDate,
-      label: day.scheduledDate === localDateKey() ? '오늘' : '',
+      label: day.scheduledDate === localDateKey() ? TODAY_LABEL : '',
       summary: focus,
       meta: tab === 'meal'
         ? `${items.length}끼 · ${calories.toLocaleString()} kcal`
@@ -98,7 +100,7 @@ function routineDaysFromApi(detail, tab) {
   }))
 }
 
-export default function RoutineDetail({ routine, onBack, onDelete, onOpenDay }) {
+export default function RoutineDetail({ routine, onBack, onDelete, onOpenDay, dataRevision = 0 }) {
   const [detail, setDetail] = useState(null)
   const [activeTab, setActiveTab] = useState(isMealRoutine(routine) ? 'meal' : 'exercise')
   const [expandedDays, setExpandedDays] = useState(new Set())
@@ -110,7 +112,7 @@ export default function RoutineDetail({ routine, onBack, onDelete, onOpenDay }) 
       if (active) setDetail(response?.data || null)
     }).catch(() => {})
     return () => { active = false }
-  }, [routine?.id])
+  }, [routine?.id, dataRevision])
 
   const apiExerciseDays = useMemo(() => routineDaysFromApi(detail, 'exercise'), [detail])
   const apiMealDays = useMemo(() => routineDaysFromApi(detail, 'meal'), [detail])
@@ -120,7 +122,7 @@ export default function RoutineDetail({ routine, onBack, onDelete, onOpenDay }) 
   const currentWeek = days[0]?.week || routine?.currentWeek || 1
 
   useEffect(() => {
-    const todayDay = days.find((day) => day.label === '오늘')
+    const todayDay = days.find((day) => day.label === TODAY_LABEL)
     setExpandedDays(todayDay ? new Set([todayDay.id]) : new Set())
   }, [activeTab, days])
 
@@ -204,7 +206,7 @@ export default function RoutineDetail({ routine, onBack, onDelete, onOpenDay }) 
           const displayNumber = day.dayNumber
           const displayUnit = '일차'
           return (
-          <article className={`routine-day-schedule ${isExpanded ? 'expanded' : 'collapsed'} ${day.label === '오늘' ? 'today' : ''}`} key={day.id}>
+          <article className={`routine-day-schedule ${isExpanded ? 'expanded' : 'collapsed'} ${day.label === TODAY_LABEL ? 'today' : ''}`} key={day.id}>
             <button type="button" className="routine-day-header" onClick={() => toggleDay(day.id)} aria-expanded={isExpanded}>
               <span className="routine-day-number">
                 <strong>{displayNumber}</strong>

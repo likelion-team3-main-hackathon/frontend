@@ -22,6 +22,7 @@ export default function HealthData({ onNext, onBack, allowSkip = false }) {
   const fileInputRef = useRef(null)
   const [categories, setCategories] = useState(() => UPLOAD_CATEGORIES.map((category) => ({ ...category, files: [] })))
   const [activeCategoryId, setActiveCategoryId] = useState(null)
+  const [pickerCategoryId, setPickerCategoryId] = useState(null)
   const [eyeBodyReady, setEyeBodyReady] = useState(false)
   const [appleLinked, setAppleLinked] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -34,6 +35,12 @@ export default function HealthData({ onNext, onBack, allowSkip = false }) {
     const input = mode === 'camera' ? cameraInputRef.current : fileInputRef.current
     input.accept = mode === 'camera' ? 'image/jpeg,image/png' : category.accept
     input.click()
+  }
+
+  function choosePickerMode(mode) {
+    const categoryId = pickerCategoryId
+    setPickerCategoryId(null)
+    if (categoryId) window.setTimeout(() => openPicker(categoryId, mode), 0)
   }
 
   function addFiles(event) {
@@ -91,7 +98,7 @@ export default function HealthData({ onNext, onBack, allowSkip = false }) {
         <div className="health-document-list">
           <article className="health-document-card">
             <div><h2>눈바디</h2><p>체형분석</p></div>
-            <button type="button" className={`document-action ${eyeBodyReady ? 'completed' : ''}`} onClick={() => setEyeBodyReady((value) => !value)}>{eyeBodyReady ? '완료' : '분석'}</button>
+            <button type="button" className={`document-action ${eyeBodyReady ? 'completed' : ''}`} onClick={() => setEyeBodyReady((value) => !value)}>{eyeBodyReady ? '완료' : '촬영'}</button>
           </article>
           <article className="health-document-card">
             <div><h2>애플 건강</h2><p>걸음·체중·수면 연동</p></div>
@@ -101,7 +108,7 @@ export default function HealthData({ onNext, onBack, allowSkip = false }) {
           {categories.map((category) => category.files.length === 0 ? (
             <article className="health-document-card" key={category.id}>
               <div><h2>{category.title}</h2><p>{category.description}</p></div>
-              <button type="button" className="document-action" onClick={() => openPicker(category.id, category.id === 'inbody' ? 'camera' : 'file')}>{category.action}</button>
+              <button type="button" className="document-action" onClick={() => category.id === 'inbody' ? setPickerCategoryId(category.id) : openPicker(category.id, 'file')}>{category.action}</button>
             </article>
           ) : (
             <article className="health-document-card health-document-card-expanded" key={category.id}>
@@ -127,6 +134,15 @@ export default function HealthData({ onNext, onBack, allowSkip = false }) {
 
       <input ref={cameraInputRef} className="hidden-file-input" type="file" accept="image/jpeg,image/png" capture="environment" multiple onChange={addFiles} />
       <input ref={fileInputRef} className="hidden-file-input" type="file" multiple onChange={addFiles} />
+
+      {pickerCategoryId && <div className="health-picker-backdrop" role="presentation" onClick={() => setPickerCategoryId(null)}>
+        <div className="health-picker-sheet" role="dialog" aria-modal="true" aria-label="인바디 사진 추가 방법" onClick={(event) => event.stopPropagation()}>
+          <strong>인바디 결과지를 추가해 주세요</strong>
+          <button type="button" onClick={() => choosePickerMode('camera')}>사진 촬영</button>
+          <button type="button" onClick={() => choosePickerMode('file')}>앨범에서 선택</button>
+          <button type="button" className="health-picker-cancel" onClick={() => setPickerCategoryId(null)}>취소</button>
+        </div>
+      </div>}
 
       <footer className="health-data-actions">
         <button type="button" className="health-next-button" onClick={handleNext} disabled={isSubmitting}>{isSubmitting ? '불러오는 중…' : '다음'}</button>

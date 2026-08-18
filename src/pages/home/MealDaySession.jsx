@@ -33,7 +33,7 @@ function sortMeals(meals) {
 
 export default function MealDaySession({ item, onDecision, onClose, viewOnly = false }) {
   const [meals, setMeals] = useState(() => sortMeals(item.dayMeals?.length ? item.dayMeals : [item]))
-  const [selectedMealId, setSelectedMealId] = useState(null)
+  const [selectedMealId, setSelectedMealId] = useState(() => item.directMealEntry ? item.id : null)
   const selectedMeal = meals.find((meal) => String(meal.id) === String(selectedMealId))
 
   const dayTotals = useMemo(() => meals.reduce((total, meal) => {

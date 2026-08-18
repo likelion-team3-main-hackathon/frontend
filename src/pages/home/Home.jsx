@@ -149,6 +149,20 @@ function mealRoutineFirst(routines) {
     .map(({ routine }) => routine)
 }
 
+function onlyLatestMealRoutine(routines) {
+  const mealRoutines = routines.filter(routineContainsMeal)
+  if (mealRoutines.length <= 1) return routines
+  const latestMealRoutine = mealRoutines.reduce((latest, routine) => {
+    const latestId = Number(latest?.id)
+    const routineId = Number(routine?.id)
+    if (Number.isFinite(latestId) && Number.isFinite(routineId)) return routineId > latestId ? routine : latest
+    const latestTime = new Date(latest?.createdAt || latest?.updatedAt || 0).getTime()
+    const routineTime = new Date(routine?.createdAt || routine?.updatedAt || 0).getTime()
+    return routineTime > latestTime ? routine : latest
+  })
+  return routines.filter((routine) => !routineContainsMeal(routine) || String(routine.id) === String(latestMealRoutine.id))
+}
+
 function statusForItem(item, statuses) {
   if (statuses[item.id]) return statuses[item.id]
   const ids = item.routineItemIds || [item.routineItemId]
@@ -187,6 +201,7 @@ export default function Home({
   initialSelectedDate,
   onDateOverrideConsumed,
   creditToast,
+  dataRevision = 0,
 }) {
   const statusesLoadedRef = useRef(onStatusesLoaded)
   const weekSliderRef = useRef(null)
@@ -246,7 +261,7 @@ export default function Home({
       const allList = routines.value?.data?.content || []
       const list = allList.filter((routine) => !hiddenRoutineIds.has(String(routine.id)))
       setIsApiConnected(true)
-      setActiveRoutines(mealRoutineFirst(list.map(routineSummary)))
+      setActiveRoutines(mealRoutineFirst(onlyLatestMealRoutine(list).map(routineSummary)))
       if (allList.length === 0) {
         setRoutineDetails([])
         return
@@ -254,15 +269,17 @@ export default function Home({
       const details = await Promise.allSettled(allList.map((routine) => getRoutine(routine.id)))
       if (active) {
         const detailList = details.filter((result) => result.status === 'fulfilled').map((result) => result.value.data)
-        setRoutineDetails(detailList)
-        setActiveRoutines(mealRoutineFirst(list.map((routine) => {
+        const mergedVisibleRoutines = onlyLatestMealRoutine(list.map((routine) => {
           const detail = detailList.find((item) => String(item.id) === String(routine.id))
-          return routineSummary(detail ? { ...routine, ...detail } : routine)
-        })))
+          return detail ? { ...routine, ...detail } : routine
+        }))
+        const finalVisibleIds = new Set(mergedVisibleRoutines.map((item) => String(item.id)))
+        setRoutineDetails(detailList.filter((item) => finalVisibleIds.has(String(item.id))))
+        setActiveRoutines(mealRoutineFirst(mergedVisibleRoutines.map(routineSummary)))
       }
     })
     return () => { active = false }
-  }, [])
+  }, [dataRevision])
 
   useEffect(() => {
     let active = true
@@ -372,7 +389,11 @@ export default function Home({
         return { ...meal, details: recordedDetails, foods: recordedDetails.foods || meal.foods }
       })
 
-    onStartRoutine?.({ ...item, dayMeals: dayMeals.length ? dayMeals : [item] }, viewOnly)
+    onStartRoutine?.({
+      ...item,
+      dayMeals: dayMeals.length ? dayMeals : [item],
+      directMealEntry: true,
+    }, viewOnly)
   }
 
   async function changeWater(change) {

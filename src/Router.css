@@ -41,7 +41,8 @@
   .my-page,
   .placeholder-page,
   .today-report-page,
-  .notification-page
+  .notification-page,
+  .ai-routine-chat-page
 ) {
   height: calc(100% + 48px);
   overflow: hidden;

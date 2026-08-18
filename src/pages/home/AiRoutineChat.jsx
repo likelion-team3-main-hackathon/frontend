@@ -12,7 +12,7 @@ import './AiRoutineChat.css'
 
 const QUICK_ACTIONS = ['장바구니에 담아줘', '내일 운동 강도 낮춰줘', '이번 주 리포트 보여줘']
 
-export default function AiRoutineChat({ onBack }) {
+export default function AiRoutineChat({ onBack, onActionExecuted }) {
   const [conversationId, setConversationId] = useState(null)
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
@@ -100,8 +100,10 @@ export default function AiRoutineChat({ onBack }) {
     setProcessingActionId(message.pendingActionId)
     setError('')
     try {
-      if (execute) await confirmChatAction(message.pendingActionId)
-      else await cancelChatAction(message.pendingActionId)
+      if (execute) {
+        const response = await confirmChatAction(message.pendingActionId)
+        onActionExecuted?.(response?.data || null)
+      } else await cancelChatAction(message.pendingActionId)
       await reloadMessages()
     } catch (requestError) {
       setError(requestError.message || '변경 요청을 처리하지 못했습니다.')

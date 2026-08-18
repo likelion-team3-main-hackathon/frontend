@@ -203,16 +203,10 @@ export default function RoutineSelection({ analysis, onComplete, onBack, onCance
       const routineResponse = await getRoutine(generation.routineId)
       const hiddenIds = new Set(JSON.parse(localStorage.getItem('renewHiddenRoutineIds') || '[]').map(String))
       hiddenIds.delete(String(generation.routineId))
-      // 대상 루틴이 이번 요청으로 식단·운동 양쪽 다 비워질 때만(원래 없던 쪽은 자동으로 "비워진" 것으로 간주)
-      // 홈 화면에서 완전히 숨긴다. 한쪽만 교체된 MIXED 루틴은 나머지 활동이 남아있으므로 계속 보여준다.
-      const fullyReplacedIds = [...new Set([...replacedMealRoutineIds, ...replacedExerciseRoutineIds])]
-        .filter((id) => {
-          const info = existingRoutines?.find((item) => item.id === id)
-          const mealGone = !info || !info.hasMeal || replacedMealRoutineIds.includes(id)
-          const exerciseGone = !info || !info.hasExercise || replacedExerciseRoutineIds.includes(id)
-          return mealGone && exerciseGone
-        })
-      fullyReplacedIds.forEach((id) => {
+      // "변경" 대상으로 선택한 기존 루틴은 새 루틴으로 교체된 것이므로 홈에서 제외한다.
+      // 식단이 포함된 혼합 루틴도 그대로 남기면 식단이 중복 노출되므로 루틴 전체를 교체 처리한다.
+      const replacedRoutineIds = [...new Set([...replacedMealRoutineIds, ...replacedExerciseRoutineIds])]
+      replacedRoutineIds.forEach((id) => {
         if (String(id) !== String(generation.routineId)) hiddenIds.add(String(id))
       })
       localStorage.setItem('renewHiddenRoutineIds', JSON.stringify([...hiddenIds]))

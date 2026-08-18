@@ -1,9 +1,284 @@
-.ai-routine-chat-page{display:flex;min-height:calc(100dvh - 48px);flex-direction:column;margin:-24px -20px;background:#faf8f2;color:#293125}
-.ai-routine-chat-page>header{display:flex;min-height:72px;align-items:center;gap:9px;padding:14px 18px;border-bottom:1px solid #e8e4da}
-.ai-routine-chat-page header>button{padding:0;border:0;background:transparent;font-size:25px}.ai-routine-chat-page header>img{box-sizing:border-box;width:35px;height:35px;padding:5px;border-radius:50%;background:#fff;object-fit:contain}.ai-routine-chat-page header>div{display:flex;flex-direction:column;gap:3px}.ai-routine-chat-page header h1{margin:0;font-size:14px}.ai-routine-chat-page header small{color:#5b9844;font-size:8px}.ai-routine-chat-page header em{margin-left:auto;padding:4px 8px;border-radius:99px;background:#edf7e8;color:#4e8b35;font-size:9px;font-style:normal;font-weight:800}
-.ai-routine-chat-page main{flex:1;overflow-y:auto;padding:12px 18px 24px}.ai-routine-chat-page main>time{display:block;color:#aaa9a2;font-size:9px;text-align:center}
-.ai-message,.user-message{display:flex;margin-top:15px}.ai-message-body{display:flex;max-width:260px;flex-direction:column;gap:8px}.ai-message .ai-message-body{max-width:292px}.ai-message-body>p{margin:0;padding:12px;border-radius:13px;background:#fff;font-size:10px;line-height:1.55;white-space:pre-wrap;word-break:break-word}.user-message{justify-content:flex-end}.user-message .ai-message-body>p{background:#4e8b35;color:#fff}
-.ai-action-card{padding:11px;border:1px solid #cfe1c4;border-radius:12px;background:#f3f9ee}.ai-action-card strong{display:block;color:#4e8b35;font-size:10px}.ai-action-card footer{display:flex;gap:6px;margin-top:10px}.ai-action-card button{padding:7px 9px;border:0;border-radius:7px;background:#4e8b35;color:#fff;font-size:8px}.ai-action-card button:last-child{background:#fff;color:#687062}.ai-action-card button:disabled{opacity:.55}.ai-action-cancelled,.ai-image-label{color:#7f877a;font-size:8px}
-.ai-quick-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}.ai-quick-actions button{padding:8px 10px;border:1px solid #ddd8cd;border-radius:99px;background:#fff;color:#596054;font-size:8px}.ai-quick-actions button:disabled{opacity:.5}
-.ai-chat-status,.ai-chat-error{margin:14px 0 0;text-align:center;font-size:9px}.ai-chat-status{color:#7f877a}.ai-chat-error{color:#c44f42}.ai-image-preview{display:flex;align-items:center;justify-content:space-between;margin:0 18px 6px;padding:7px 10px;border-radius:9px;background:#edf7e8;color:#4e8b35;font-size:9px}.ai-image-preview button{border:0;background:transparent;color:inherit;font-size:16px}
-.ai-chat-input{display:flex;gap:7px;margin:0 18px 15px;padding:9px;border:1px solid #e5e1d8;border-radius:13px;background:#fff}.ai-chat-input>input:not(.ai-image-input){min-width:0;flex:1;border:0;outline:0;background:transparent;font:inherit}.ai-image-input{display:none}.ai-chat-input button{width:34px;height:34px;border:0;border-radius:50%;color:#fff}.ai-attach-button{background:#d9ddcf}.ai-send-button{background:#4e8b35}.ai-chat-input button:disabled{background:#a9a99f}
+/* ─────────────────────────────────────────────
+   채팅 페이지 레이아웃
+───────────────────────────────────────────── */
+.ai-routine-chat-page {
+  display: flex;
+  height: calc(100% + 48px);
+  min-height: 0;
+  flex-direction: column;
+  margin: -24px -20px;
+  background: #faf8f2;
+  color: #293125;
+}
+
+/* ─────────────────────────────────────────────
+   상단 프로필 헤더
+───────────────────────────────────────────── */
+.ai-routine-chat-page > header {
+  display: flex;
+  min-height: 72px;
+  align-items: center;
+  gap: 9px;
+  padding: 14px 18px;
+  border-bottom: 1px solid #e8e4da;
+}
+
+.ai-routine-chat-page header > button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: 25px;
+}
+
+.ai-routine-chat-page header > img {
+  box-sizing: border-box;
+  width: 35px;
+  height: 35px;
+  padding: 5px;
+  border-radius: 50%;
+  background: #fff;
+  object-fit: contain;
+}
+
+.ai-routine-chat-page header > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ai-routine-chat-page header h1 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.ai-routine-chat-page header small {
+  color: #4E9A38;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.ai-routine-chat-page header em {
+  margin-left: auto;
+  padding: 4px 8px;
+  border-radius: 99px;
+  background: #edf7e8;
+  color: #4e8b35;
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+/* ─────────────────────────────────────────────
+   메시지 스크롤 영역
+───────────────────────────────────────────── */
+.ai-routine-chat-page main {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 18px 24px;
+}
+
+.ai-routine-chat-page main > time {
+  display: block;
+  color: #aaa9a2;
+  font-size: 9px;
+  text-align: center;
+}
+
+/* ─────────────────────────────────────────────
+   사용자 및 AI 메시지 말풍선
+───────────────────────────────────────────── */
+.ai-message,
+.user-message {
+  display: flex;
+  margin-top: 15px;
+}
+
+.ai-message-body {
+  display: flex;
+  max-width: 260px;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ai-message .ai-message-body {
+  max-width: 292px;
+}
+
+.ai-message-body > p {
+  margin: 0;
+  padding: 12px;
+  border-radius: 14px;
+  background: #fff;
+  font-size: 12.3px;
+  line-height: 1.55;
+  font-weight: 400;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.user-message {
+  justify-content: flex-end;
+}
+
+.user-message .ai-message-body > p {
+  background: #4e8b35;
+  color: #fff;
+}
+
+/* ─────────────────────────────────────────────
+   AI 변경 제안 및 실행 결과 카드
+───────────────────────────────────────────── */
+.ai-action-card {
+  padding: 11px;
+  border: 1px solid #cfe1c4;
+  border-radius: 12px;
+  background: #f3f9ee;
+}
+
+.ai-action-card strong {
+  display: block;
+  color: #33562A;
+  font-size: 11.6px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.ai-action-card footer {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.ai-action-card button {
+  padding: 7px 9px;
+  border: 0;
+  border-radius: 7px;
+  background: #4e8b35;
+  color: #fff;
+  font-size: 11.4px;
+}
+
+.ai-action-card button:last-child {
+  background: #fff;
+  color: #687062;
+}
+
+.ai-action-card button:disabled {
+  opacity: 0.55;
+}
+
+.ai-action-cancelled,
+.ai-image-label {
+  color: #7f877a;
+  font-size: 8px;
+}
+
+/* ─────────────────────────────────────────────
+   빠른 질문 버튼
+───────────────────────────────────────────── */
+.ai-quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.ai-quick-actions button {
+  padding: 8px 10px;
+  border: 1px solid #ddd8cd;
+  border-radius: 99px;
+  background: #fff;
+  color: #596054;
+  font-size: 8px;
+}
+
+.ai-quick-actions button:disabled {
+  opacity: 0.5;
+}
+
+/* ─────────────────────────────────────────────
+   로딩 및 오류 상태
+───────────────────────────────────────────── */
+.ai-chat-status,
+.ai-chat-error {
+  margin: 14px 0 0;
+  text-align: center;
+  font-size: 9px;
+}
+
+.ai-chat-status {
+  color: #7f877a;
+}
+
+.ai-chat-error {
+  color: #c44f42;
+}
+
+/* ─────────────────────────────────────────────
+   첨부 이미지 미리보기
+───────────────────────────────────────────── */
+.ai-image-preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 18px 24px;
+  padding: 7px 10px;
+  border-radius: 9px;
+  background: #edf7e8;
+  color: #4e8b35;
+  font-size: 9px;
+}
+
+.ai-image-preview button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 16px;
+}
+
+/* ─────────────────────────────────────────────
+   하단 메시지 입력창
+───────────────────────────────────────────── */
+.ai-chat-input {
+  display: flex;
+  gap: 7px;
+  margin: 0 18px 6px;
+  padding: 9px;
+  border: 1px solid #e5e1d8;
+  border-radius: 13px;
+  background: #fff;
+}
+
+.ai-chat-input > input:not(.ai-image-input) {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: inherit;
+}
+
+.ai-image-input {
+  display: none;
+}
+
+.ai-chat-input button {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  color: #fff;
+}
+
+.ai-attach-button {
+  background: #d9ddcf;
+}
+
+.ai-send-button {
+  background: #4e8b35;
+}
+
+.ai-chat-input button:disabled {
+  background: #a9a99f;
+}

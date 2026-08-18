@@ -87,8 +87,8 @@ export default function MyPage({ initialProfile, onNavigate, onResetRoutine, onL
         <article className="my-profile-card">
           <div className="my-profile-main">
             <span className="my-avatar">{profile?.profileImageUrl ? <img src={profile.profileImageUrl} alt="" /> : <img src={smileIcon} alt="" />}</span>
-            <div><strong>{profile?.name || '사용자'}</strong><small>{handle}</small></div>
-            <em>{Math.max(1, stats.active)}일 연속</em><button type="button" className="nickname-edit-button" onClick={openNicknameEditor}>닉네임 바꾸기</button>
+            <div><span className="my-profile-name-row"><strong>{profile?.name || '사용자'}</strong><em>{Math.max(1, stats.active)}일 연속</em></span><small>{handle}</small></div>
+            <button type="button" className="nickname-edit-button" onClick={openNicknameEditor}>닉네임 바꾸기</button>
           </div>
           <div className="my-credit-row"><span><small>보유 크레딧</small><strong>{creditBalance.toLocaleString()} <i>C</i></strong></span><span><small>루틴 완료 후 반영</small><strong>자동 적립</strong></span></div>
           <div className="my-stat-row"><span><strong>{stats.total}</strong><small>진행 루틴</small></span><span><strong>{stats.completed}</strong><small>완료 운동</small></span><span><strong>72</strong><small>웰니스 지수</small></span><span><strong>14</strong><small>친구</small></span></div>
