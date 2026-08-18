@@ -198,6 +198,12 @@ line-height: normal;
 }
 .routine-selection-actions .routine-selection-cancel{margin-top:7px;background:transparent;color:#777d73}.routine-reset-modal-backdrop{position:fixed;z-index:50;inset:0;display:flex;align-items:flex-end;justify-content:center;padding:20px;background:rgba(22,28,20,.38)}.routine-reset-modal{width:min(100%,360px);padding:22px 18px 18px;border-radius:20px;background:#fff}.routine-reset-modal h2{margin:0;font-size:17px}.routine-reset-modal p{margin:10px 0 18px;color:#73796f;font-size:12px;line-height:1.55}.routine-reset-modal>div{display:flex;gap:8px}.routine-reset-modal button{min-height:42px;flex:1;border:1px solid #dfe3da;border-radius:11px;background:#fff;color:#4a5146;font-weight:700}.routine-reset-modal button.primary{border-color:#4e8b35;background:#4e8b35;color:#fff}
 
+.routine-target-list{list-style:none;margin:0 0 18px;padding:0;display:flex;flex-direction:column;gap:8px;max-height:240px;overflow-y:auto}
+.routine-target-list li{border:1px solid #e5e8e1;border-radius:11px;padding:2px}
+.routine-target-list label{display:flex;align-items:center;gap:10px;min-height:42px;padding:0 12px;font-size:13px;font-weight:600;color:#3a4136}
+.routine-target-list input{width:16px;height:16px;accent-color:#4e8b35}
+.routine-target-list small{display:block;margin-top:2px;color:#9a9a90;font-size:10px;font-weight:400}
+
 .routine-generation-status,
 .routine-generation-error {
   margin: 18px 2px 0;
