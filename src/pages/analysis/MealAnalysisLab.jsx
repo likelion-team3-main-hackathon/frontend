@@ -46,7 +46,8 @@ export default function MealAnalysisLab({ onBack }) {
   const [trendNutrient, setTrendNutrient] = useState('proteinGrams')
   const [averageDays, setAverageDays] = useState(1)
   const range = useMemo(() => {
-    const to = new Date()
+    const anchorDate = sessionStorage.getItem('analysisAnchorDate')
+    const to = anchorDate ? new Date(`${anchorDate}T00:00:00`) : new Date()
     const from = new Date(to)
     from.setDate(to.getDate() - (averageDays - 1))
     return { from: dateKey(from), to: dateKey(to) }

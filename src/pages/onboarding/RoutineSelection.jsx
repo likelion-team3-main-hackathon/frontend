@@ -235,7 +235,7 @@ export default function RoutineSelection({ analysis, onComplete, onBack, onCance
       <div className="routine-selection-content">
         <button type="button" className="routine-selection-back" onClick={onBack} aria-label="직전 페이지로 돌아가기">‹</button>
         <h1>추천 루틴</h1>
-        <p className="routine-selection-intro">식단과 운동을 각각 하나씩 고르거나, 필요한 유형만 선택할 수 있어요</p>
+        <p className="routine-selection-intro">진단 · 목표 · 생활을 반영해 골랐어요</p>
 
         {groups.map((group) => (
           <section className="routine-group" key={group.category}>
@@ -243,9 +243,6 @@ export default function RoutineSelection({ analysis, onComplete, onBack, onCance
             <div className="routine-card-slider" aria-label={`${group.title} 목록`}>
               {group.routines.map((routine) => {
                 const isSelected = selectedIds.has(routine.id)
-                const frequency = routine.category === 'MEAL'
-                  ? `하루 ${routine.mealCountPerDay}끼`
-                  : `주 ${routine.exerciseDaysPerWeek}회`
 
                 return (
                   <button
@@ -255,15 +252,13 @@ export default function RoutineSelection({ analysis, onComplete, onBack, onCance
                     disabled={isSubmitting}
                     onClick={() => toggleRoutine(routine)}
                   >
-                    <span className="routine-card-type">{routine.category === 'MEAL' ? '식단' : '운동'}</span>
+                    <span className="routine-card-image">이미지</span>
                     <span className="routine-selected-mark" aria-hidden="true">{isSelected ? '✓' : ''}</span>
                     <strong>{routine.title}</strong>
-                    <small>{routine.durationWeeks}주 · {frequency}</small>
                     <span className="routine-tags">
-                      {(routine.tags || []).map((tag) => <em key={tag}>{tag}</em>)}
+                      {(routine.tags || []).map((tag, index) => <em className={index === 0 ? 'category' : 'detail'} key={tag}>{tag}</em>)}
                     </span>
-                    <p>{routine.description}</p>
-                    <p className="routine-rationale">추천 이유 · {routine.rationale}</p>
+                    <p className="routine-rationale">{routine.rationale}</p>
                   </button>
                 )
               })}

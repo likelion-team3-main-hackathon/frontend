@@ -9,6 +9,7 @@ import bellIcon from '../../assets/icons/bell.png'
 import exerciseIcon from '../../assets/icons/routine/exercise.png'
 import mealIcon from '../../assets/icons/routine/meal.png'
 import mealActiveIcon from '../../assets/icons/routine/meal_a.png'
+import titleLogo from '../../assets/icons/logo/logo_title.png'
 import './Home.css'
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
@@ -383,7 +384,7 @@ export default function Home({
     <section className="home-page">
       <div className="home-scroll-content">
         <header className="home-topbar">
-          <strong>리뉴</strong>
+          <img className="home-title-logo" src={titleLogo} alt="리뉴" />
           <div className="home-topbar-actions">
             <button type="button" aria-label="알림" onClick={() => onOpenNotifications?.(mealFirst(scheduledItems(routineDetails, todayKey)), todayKey)}><img src={bellIcon} alt="" /></button>
           </div>

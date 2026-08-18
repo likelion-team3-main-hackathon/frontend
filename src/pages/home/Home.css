@@ -31,10 +31,11 @@
   justify-content: space-between;
 }
 
-.home-topbar strong {
-  color: #51903b;
-  font-size: 19px;
-  font-weight: 800;
+.home-title-logo {
+  display: block;
+  width: 51px;
+  height: 33px;
+  object-fit: contain;
 }
 
 .home-topbar button {

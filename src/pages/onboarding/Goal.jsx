@@ -27,8 +27,8 @@ function valueList(value) {
 function listText(value) { return valueList(value).join(', ') }
 function splitList(value) { return String(value || '').split(',').map((item) => item.trim()).filter(Boolean) }
 
-export default function Goal({ onNext, onBack }) {
-  const [step, setStep] = useState(1)
+export default function Goal({ onNext, onBack, initialStep = 1 }) {
+  const [step, setStep] = useState(initialStep)
   const [form, setForm] = useState(() => ({ ...DEFAULT_FORM, ...getDraft(), name: localStorage.getItem('renewNickname')?.trim() || getDraft().name || '' }))
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -112,6 +112,6 @@ export default function Goal({ onNext, onBack }) {
       {step === 8 && <><h1>주의해야할 사항 있을까요?</h1><p>쉼표로 여러 항목을 나눠 적을 수 있어요</p><div className="preference-fields"><label><span>선호 음식</span><input value={form.dietaryPreferencesText} onChange={(event) => updateField('dietaryPreferencesText', event.target.value)} placeholder="예: 한식, 고단백 식단" /></label><label><span>기피 음식</span><input value={form.dislikedFoodsText} onChange={(event) => updateField('dislikedFoodsText', event.target.value)} placeholder="예: 오이, 가지" /></label><label><span>알레르기</span><input value={form.allergiesText} onChange={(event) => updateField('allergiesText', event.target.value)} placeholder="예: 땅콩, 우유" /></label><label><span>병력</span><textarea value={form.medicalHistoryText} onChange={(event) => updateField('medicalHistoryText', event.target.value)} placeholder="예: 허리 디스크, 왼쪽 무릎 통증" /></label></div></>}
       {error && <p className="goal-error">{error}</p>}
     </div>
-    <footer className="goal-actions"><button type="button" className="next-button" disabled={!canContinue() || isSubmitting} onClick={next}>{isSubmitting ? '저장 중…' : '다음'}</button></footer>
+    <footer className="goal-actions">{step === 8 && <p style={{ margin: '0 0 9px', color: '#8f948b', fontSize: '10px', textAlign: 'center' }}>기입하지 않아도 괜찮아요</p>}<button type="button" className="next-button" disabled={!canContinue() || isSubmitting} onClick={next}>{isSubmitting ? '저장 중…' : '다음'}</button></footer>
   </section>
 }

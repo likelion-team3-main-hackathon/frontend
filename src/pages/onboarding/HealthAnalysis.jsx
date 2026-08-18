@@ -151,7 +151,6 @@ export default function HealthAnalysis({ healthDocuments, onNext, onBack, onRetu
       <header className="health-analysis-header">
         <button type="button" className="onboarding-analysis-back" onClick={onBack} aria-label="직전 페이지로 돌아가기">‹</button>
       </header>
-      <div className="analysis-mask">마스코트 · {status}</div>
       <h1>{analysis ? `${analysis.documentFindings?.length || sourceCount}개 문서와 목표를 종합했어요` : '건강 정보를 확인하고 있어요'}</h1>
       <p className="analysis-source-count">
         {healthDocuments?.useExisting ? `기존 분석 정보 ${sourceCount}개와 변경한 목표를 반영합니다` : `선택한 건강 정보 ${sourceCount}개를 분석합니다`}

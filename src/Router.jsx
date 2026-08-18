@@ -69,6 +69,7 @@ export default function Router() {
   const [checkoutOrder, setCheckoutOrder] = useState(null)
   const [checkoutBackPage, setCheckoutBackPage] = useState('market')
   const [healthDataBackPage, setHealthDataBackPage] = useState('goal')
+  const [goalInitialStep, setGoalInitialStep] = useState(1)
   const [isRoutineReset, setIsRoutineReset] = useState(false)
   const [homeInitialDate, setHomeInitialDate] = useState(null)
 
@@ -122,12 +123,12 @@ export default function Router() {
 
         {page === 'health-consent' && (
           <HealthConsent
-            onAgree={() => setPage('goal')}
+            onAgree={() => { setGoalInitialStep(1); setPage('goal') }}
             onCancel={() => setPage('login')}
           />
         )}
 
-        {page === 'goal' && <Goal onBack={() => {
+        {page === 'goal' && <Goal initialStep={goalInitialStep} onBack={() => {
           if (isRoutineReset) {
             setIsRoutineReset(false)
             setPage('home')
@@ -141,6 +142,10 @@ export default function Router() {
         {page === 'health-data' && (
           <HealthData
             allowSkip={isRoutineReset}
+            onBack={() => {
+              if (healthDataBackPage === 'goal') setGoalInitialStep(8)
+              setPage(healthDataBackPage)
+            }}
             onNext={(data) => {
               if (!data) {
                 setHealthDocuments({ documents: [], documentIds: [], useExisting: true })
@@ -217,6 +222,7 @@ export default function Router() {
             onCreateRoutine={() => {
               setIsRoutineReset(false)
               setHealthDataBackPage('goal')
+              setGoalInitialStep(1)
               setPage('goal')
             }}
             onOpenNotifications={(items, selectedDate) => {
@@ -353,6 +359,7 @@ export default function Router() {
         {page === 'my' && <MyPage initialProfile={profile} onNavigate={setPage} onOpenAi={() => openAiChat('my')} onNicknameChange={(nickname) => setProfile((current) => ({ ...current, name: nickname, nickname }))} onResetRoutine={() => {
           setIsRoutineReset(true)
           setHealthDataBackPage('goal')
+          setGoalInitialStep(1)
           setPage('goal')
         }} onLoggedOut={() => {
           setProfile(null)

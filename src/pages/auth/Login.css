@@ -5,16 +5,18 @@
   padding: 120px 0 56px;
 }
 
-.login-logo-placeholder {
+.login-logo {
   display: grid;
   width: 100%;
   min-height: 198px;
   place-items: center;
-  border-radius: 18px;
-  background: #edf6e5;
-  color: #65a24b;
-  font-size: 15px;
-  font-weight: 600;
+}
+
+.login-logo img {
+  display: block;
+  width: min(285px, 87%);
+  height: auto;
+  object-fit: contain;
 }
 
 .login-copy { margin-top: 98px; }

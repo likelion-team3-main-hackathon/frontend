@@ -21,7 +21,8 @@ export default function ExerciseAnalysisLab({ onBack }) {
   const [report, setReport] = useState(null)
   const [error, setError] = useState('')
   const range = useMemo(() => {
-    const to = new Date()
+    const anchorDate = sessionStorage.getItem('analysisAnchorDate')
+    const to = anchorDate ? new Date(`${anchorDate}T00:00:00`) : new Date()
     const from = new Date(to)
     from.setDate(to.getDate() - 27)
     return { from: dateKey(from), to: dateKey(to) }
@@ -38,7 +39,7 @@ export default function ExerciseAnalysisLab({ onBack }) {
   const parts = report?.muscleGroupVolumes || []
   const dailyValues = new Map((report?.dailyTrend || []).map((day) => [day.date, day]))
   const dailyTrend = Array.from({ length: 7 }, (_, index) => {
-    const date = new Date()
+    const date = new Date(`${range.to}T00:00:00`)
     date.setHours(12, 0, 0, 0)
     date.setDate(date.getDate() - (6 - index))
     const key = dateKey(date)
