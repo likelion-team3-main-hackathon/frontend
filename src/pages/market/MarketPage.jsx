@@ -154,7 +154,7 @@ export default function MarketPage({ onNavigate, onOpenProduct, onOpenExpert, on
   return (
     <section className="market-page">
       <div className="market-scroll">
-        <header><h1>마켓</h1><div><button type="button" aria-label="장바구니" onClick={onOpenCart}>🛒{cartCount > 0 && <b>{cartCount}</b>}</button><button type="button" aria-label="찜">♡</button></div></header>
+        <header><h1>마켓</h1><div><button type="button" aria-label="장바구니" onClick={onOpenCart}>🛒{cartCount > 0 && <b>{cartCount}</b>}</button></div></header>
         <label className="market-search"><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="루틴·재료 검색" /><span>⌕</span></label>
 
         <div className="market-tabs"><button type="button" className={tab === 'expert' ? 'active' : ''} onClick={() => { setTab('expert'); onTabChange?.('expert') }}>전문가 루틴</button><button type="button" className={tab === 'meal' ? 'active' : ''} onClick={() => { setTab('meal'); onTabChange?.('meal') }}>식단·재료</button></div>

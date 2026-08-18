@@ -7,7 +7,7 @@ import {
   getChatMessages,
   sendChatMessage,
 } from '../../api/chat'
-import smileIcon from '../../assets/icons/smile.png'
+import catLogo from '../../assets/icons/logo/고양이 로고 2.png'
 import './AiRoutineChat.css'
 
 const QUICK_ACTIONS = ['장바구니에 담아줘', '내일 운동 강도 낮춰줘', '이번 주 리포트 보여줘']
@@ -148,7 +148,7 @@ export default function AiRoutineChat({ onBack }) {
     <section className="ai-routine-chat-page">
       <header>
         <button type="button" onClick={onBack}>‹</button>
-        <img src={smileIcon} alt="" />
+        <img src={catLogo} alt="" />
         <div><h1>리뉴 연구원</h1><small>내 기록 · 루틴 열람 중</small></div>
         <em>AI</em>
       </header>
@@ -158,7 +158,6 @@ export default function AiRoutineChat({ onBack }) {
         {loading && <p className="ai-chat-status">대화를 불러오고 있어요…</p>}
         {!loading && messages.length === 0 && (
           <div className="ai-message">
-            <i />
             <div className="ai-message-body"><p>건강 기록과 루틴에 대해 무엇이든 물어보세요.</p></div>
           </div>
         )}
@@ -166,7 +165,6 @@ export default function AiRoutineChat({ onBack }) {
           const isUser = message.role === 'USER'
           return (
             <div className={isUser ? 'user-message' : 'ai-message'} key={message.messageId}>
-              {!isUser && <i />}
               <div className="ai-message-body">
                 <p>{message.content}</p>
                 {message.hasImage && <small className="ai-image-label">사진 첨부됨</small>}

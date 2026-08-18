@@ -34,9 +34,10 @@ export default function BodyCompositionLab({ onBack, onUpload }) {
   const [report, setReport] = useState(null)
   const [error, setError] = useState('')
   const range = useMemo(() => {
-    const today = new Date()
-    const from = new Date(today.getFullYear(), 0, 1)
-    const to = new Date(today.getFullYear(), 11, 31)
+    const anchorDate = sessionStorage.getItem('analysisAnchorDate')
+    const to = anchorDate ? new Date(`${anchorDate}T00:00:00`) : new Date()
+    const from = new Date(to)
+    from.setFullYear(to.getFullYear() - 5)
     return { from: dateKey(from), to: dateKey(to) }
   }, [])
 

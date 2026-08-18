@@ -20,14 +20,18 @@ export default function AnalysisLab({ onNavigate }) {
   const [error, setError] = useState('')
   const [period, setPeriod] = useState(() => sessionStorage.getItem('analysisPeriod') || 'daily')
   const today = useMemo(() => new Date(), [])
+  const todayKey = useMemo(() => dateKey(today), [today])
+  const [selectedDate, setSelectedDate] = useState(() => sessionStorage.getItem('analysisAnchorDate') || todayKey)
   useEffect(() => {
     let active = true
     setError('')
-    getAnalysisOverview(period, dateKey(today))
+    getAnalysisOverview(period, selectedDate)
       .then((response) => { if (active) setReport(response?.data || null) })
       .catch((requestError) => { if (active) setError(requestError.message) })
     return () => { active = false }
-  }, [period, today])
+  }, [period, selectedDate])
+
+  const selectedDateValue = useMemo(() => new Date(`${selectedDate}T00:00:00`), [selectedDate])
 
   const periodMetrics = useMemo(() => {
     const idByType = {
@@ -60,12 +64,12 @@ export default function AnalysisLab({ onNavigate }) {
   const totalScore = report?.overallScore
   const summary = report?.summary || '기록을 추가하면 종합 분석을 확인할 수 있어요.'
   const recommendations = report?.recommendations || []
-  const periodLabel = period === 'monthly' ? '이번 달' : period === 'weekly' ? '이번 주' : '오늘'
+  const periodLabel = period === 'monthly' ? '선택한 달' : period === 'weekly' ? '선택한 주' : '선택한 날짜'
   const rangeLabel = report?.period ? `${report.period.from}–${report.period.to}` : '조회 중'
 
   return <section className="analysis-lab-page">
     <div className="analysis-lab-scroll">
-      <header className="analysis-lab-header"><h1>분석실</h1><span>{today.getFullYear()}. {today.getMonth() + 1}. {today.getDate()}.　▣</span></header>
+      <header className="analysis-lab-header"><h1>분석실</h1><label className="analysis-date-picker"><span>{selectedDateValue.getFullYear()}. {selectedDateValue.getMonth() + 1}. {selectedDateValue.getDate()}.</span><input type="date" value={selectedDate} max={todayKey} aria-label="분석 기준 날짜 선택" onChange={(event) => { const value = event.target.value; if (!value) return; setSelectedDate(value); sessionStorage.setItem('analysisAnchorDate', value) }} /></label></header>
       <nav className="analysis-period-tabs"><button type="button" className={period === 'daily' ? 'active' : ''} onClick={() => { setPeriod('daily'); sessionStorage.setItem('analysisPeriod', 'daily') }}>일별</button><button type="button" className={period === 'weekly' ? 'active' : ''} onClick={() => { setPeriod('weekly'); sessionStorage.setItem('analysisPeriod', 'weekly') }}>주별</button><button type="button" className={period === 'monthly' ? 'active' : ''} onClick={() => { setPeriod('monthly'); sessionStorage.setItem('analysisPeriod', 'monthly') }}>월별</button></nav>
 
       <article className="wellness-card">

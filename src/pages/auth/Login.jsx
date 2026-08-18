@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { loginWithGoogle } from '../../api/auth'
+import titleLogo from '../../assets/icons/logo/logo_title.png'
 import './Login.css'
 
 const GOOGLE_SCRIPT_ID = 'google-identity-services'
@@ -150,7 +151,7 @@ export default function Login({ onLoginSuccess }) {
 
   return (
     <section className="login-page">
-      <div className="login-logo-placeholder">로고 · 마스코트</div>
+      <div className="login-logo"><img src={titleLogo} alt="리뉴" /></div>
 
       <div className="login-copy">
         <h1>
