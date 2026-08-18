@@ -15,6 +15,14 @@ function polygonPoints(values, radius = 48, center = 60) {
   }).join(' ')
 }
 
+function axisPoint(index, count, radius = 56, center = 60) {
+  const angle = -Math.PI / 2 + (Math.PI * 2 * index) / count
+  return {
+    x: center + Math.cos(angle) * radius,
+    y: center + Math.sin(angle) * radius,
+  }
+}
+
 export default function AnalysisLab({ onNavigate }) {
   const [report, setReport] = useState(null)
   const [error, setError] = useState('')
@@ -74,7 +82,7 @@ export default function AnalysisLab({ onNavigate }) {
 
       <article className="wellness-card">
         <div><small>종합 웰니스 지수</small><strong>{totalScore ?? '–'}</strong><p>{periodLabel} 기록 기준</p><span>{report?.status === 'INSUFFICIENT_DATA' ? '분석할 기록이 더 필요해요' : '실제 기록 기반 점수'}</span></div>
-        <svg viewBox="0 0 120 120" aria-label="웰니스 지표 방사형 그래프"><g>{[20, 35, 50].map((radius) => <polygon key={radius} points={polygonPoints(periodMetrics.map(() => radius * 2), 50)} />)}{periodMetrics.map((_, index) => <line key={index} x1="60" y1="60" x2={60 + Math.cos(-Math.PI / 2 + Math.PI * 2 * index / Math.max(1, periodMetrics.length)) * 50} y2={60 + Math.sin(-Math.PI / 2 + Math.PI * 2 * index / Math.max(1, periodMetrics.length)) * 50} />)}{periodMetrics.length > 2 && <polygon className="radar-value" points={polygonPoints(periodMetrics.map((metric) => metric.score || 0))} />}</g></svg>
+        <svg viewBox="0 0 120 120" aria-label="웰니스 지표 방사형 그래프"><g>{[20, 35, 50].map((radius) => <polygon key={radius} points={polygonPoints(periodMetrics.map(() => radius * 2), 50)} />)}{periodMetrics.map((_, index) => { const point = axisPoint(index, Math.max(1, periodMetrics.length), 50); return <line key={index} x1="60" y1="60" x2={point.x} y2={point.y} /> })}{periodMetrics.length > 2 && <polygon className="radar-value" points={polygonPoints(periodMetrics.map((metric) => metric.score || 0))} />}{periodMetrics.map((metric, index) => { const point = axisPoint(index, Math.max(1, periodMetrics.length), 53); return <text className="radar-axis-label" key={`label-${metric.id}`} x={point.x} y={point.y} textAnchor={point.x < 53 ? 'end' : point.x > 67 ? 'start' : 'middle'}>{metric.label}</text> })}</g></svg>
         <div className="wellness-score-row" style={{ gridTemplateColumns: `repeat(${Math.max(1, periodMetrics.length)}, 1fr)` }}>{periodMetrics.map((metric) => <span key={metric.id}>{metric.label}<b>{metric.score ?? '–'}</b></span>)}</div>
       </article>
 

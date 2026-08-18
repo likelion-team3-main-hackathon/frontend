@@ -9,7 +9,7 @@ import './MyPage.css'
 
 const MENU_ITEMS = [
   { id: 'health-records', icon: '⚕', label: '건강 정보 · 진료 기록' },
-  { icon: '◇', label: '크레딧 내역', value: '2,400 C' },
+  { icon: '◇', label: '크레딧 내역' },
   { icon: '▤', label: '주문 · 배송', value: '2건' },
   { icon: '♡', label: '찜한 루틴 · 상품', value: '8' },
   { icon: '♟', label: '연동된 앱', value: '4개' },
@@ -76,11 +76,11 @@ export default function MyPage({ initialProfile, onNavigate, onResetRoutine, onL
             <div><strong>{profile?.name || '사용자'}</strong><small>{handle}</small></div>
             <em>{Math.max(1, stats.active)}일 연속</em><button type="button" className="nickname-edit-button" onClick={openNicknameEditor}>닉네임 바꾸기</button>
           </div>
-          <div className="my-credit-row"><span><small>보유 크레딧</small><strong>2,400 <i>C</i></strong></span><span><small>이번 주 적립</small><strong>+300</strong></span></div>
+          <div className="my-credit-row"><span><small>보유 크레딧</small><strong>{Number(profile?.creditBalance || 0).toLocaleString()} <i>C</i></strong></span><span><small>루틴 완료 후 반영</small><strong>자동 적립</strong></span></div>
           <div className="my-stat-row"><span><strong>{stats.total}</strong><small>진행 루틴</small></span><span><strong>{stats.completed}</strong><small>완료 운동</small></span><span><strong>72</strong><small>웰니스 지수</small></span><span><strong>14</strong><small>친구</small></span></div>
         </article>
 
-        <div className="my-menu-card">{MENU_ITEMS.map((item) => <button type="button" key={item.label} onClick={() => item.id && onNavigate?.(item.id)}><i>{item.icon}</i><strong>{item.label}</strong><span>{item.id === 'health-records' ? `${healthDocumentCount}건` : item.value}</span><b>›</b></button>)}</div>
+        <div className="my-menu-card">{MENU_ITEMS.map((item) => <button type="button" key={item.label} onClick={() => item.id && onNavigate?.(item.id)}><i>{item.icon}</i><strong>{item.label}</strong><span>{item.id === 'health-records' ? `${healthDocumentCount}건` : item.label === '크레딧 내역' ? `${Number(profile?.creditBalance || 0).toLocaleString()} C` : item.value}</span><b>›</b></button>)}</div>
 
         <button type="button" className="my-ai-history" onClick={onOpenAi}><i>◎</i><span><strong>AI 챗봇</strong><small>리뉴 연구원과 대화하기</small></span><b>›</b></button>
 

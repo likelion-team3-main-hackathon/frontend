@@ -130,6 +130,10 @@ function isMealActivity(item) {
   return ['아침', '점심', '저녁', '끼니', '식단'].some((keyword) => item.type?.includes(keyword))
 }
 
+function creditReward(item) {
+  return isMealActivity(item) ? 10 : 20
+}
+
 function mealFirst(items) {
   return [...items].sort((left, right) => Number(isMealActivity(right)) - Number(isMealActivity(left)))
 }
@@ -422,7 +426,7 @@ export default function Home({
               setRoutineSlide(Math.max(0, Math.min(activeRoutines.length - 1, Math.round(slider.scrollLeft / (cardWidth + 10)))))
             }}
           >
-            {activeRoutines.map((routine) => <button type="button" className="active-routine-card" key={routine.id} onClick={() => onOpenRoutine?.(routine)}><div><strong>{routine.title}</strong><em>{routine.badge}</em><span>›</span></div><div className="routine-progress"><i style={{ width: `${routine.progress}%` }} /></div><div className="routine-weeks">{Array.from({ length: routine.totalWeeks }, (_, index) => <span className={index + 1 === routine.currentWeek ? 'current' : ''} key={index}>{index + 1}주</span>)}</div></button>)}
+            {activeRoutines.map((routine) => { const mealRoutine = routineContainsMeal(routine); return <button type="button" className="active-routine-card" key={routine.id} onClick={() => onOpenRoutine?.(routine)}><div><strong>{routine.title}</strong><em>{routine.badge}</em><small className="routine-credit-reward">+{mealRoutine ? 10 : 20}C {mealRoutine ? '끼니' : '운동일'}</small><span>›</span></div><div className="routine-progress"><i style={{ width: `${routine.progress}%` }} /></div><div className="routine-weeks">{Array.from({ length: routine.totalWeeks }, (_, index) => <span className={index + 1 === routine.currentWeek ? 'current' : ''} key={index}>{index + 1}주</span>)}</div></button> })}
           </div>
           <div className="slider-dots">
             {activeRoutines.map((routine, index) => <i className={index === routineSlide ? 'active' : ''} key={routine.id} />)}
@@ -448,7 +452,7 @@ export default function Home({
             const compactDetail = mealActivity && status === 'completed'
               ? `섭취 ${(routineCalories[item.id] ?? item.calories ?? 0).toLocaleString()} kcal`
               : item.detail
-            return <article className={`today-card ${isPrimary ? 'primary' : ''} ${status || ''}`} key={item.id}><span className="timeline-dot" />{isPrimary ? <><button type="button" className="today-primary-content" onClick={() => mealActivity && openRoutineSession(item, false)}><div className="today-meta"><em>● {item.type}</em><b>›</b></div><h2>{item.title}</h2><p>{item.detail}</p></button><button type="button" className="routine-start-button" onClick={() => openRoutineSession(item, false)}>시작하기</button><button type="button" className="routine-pass-button" onClick={() => onPassRoutine?.(item)}>패스하기</button></> : <button type="button" className="compact-routine" onClick={() => openRoutineSession(item, !isSelectedToday || Boolean(status))}><img className="routine-activity-icon" src={activityIcon} alt="" /><div><strong>{item.type} · {item.title}</strong><small>{compactDetail}</small></div>{status === 'completed' && <span className="routine-status-icon completed">✓</span>}</button>}</article>
+            return <article className={`today-card ${isPrimary ? 'primary' : ''} ${status || ''}`} key={item.id}><span className="timeline-dot" />{isPrimary ? <><button type="button" className="today-primary-content" onClick={() => mealActivity && openRoutineSession(item, false)}><div className="today-meta"><em>● {item.type}</em><span className="credit-reward">+{creditReward(item)}C</span><b>›</b></div><h2>{item.title}</h2><p>{item.detail}</p></button><button type="button" className="routine-start-button" onClick={() => openRoutineSession(item, false)}>시작하기</button><button type="button" className="routine-pass-button" onClick={() => onPassRoutine?.(item)}>패스하기</button></> : <button type="button" className="compact-routine" onClick={() => openRoutineSession(item, !isSelectedToday || Boolean(status))}><img className="routine-activity-icon" src={activityIcon} alt="" /><div><strong>{item.type} · {item.title}</strong><small>{compactDetail}</small></div><span className="credit-reward">+{creditReward(item)}C</span>{status === 'completed' && <span className="routine-status-icon completed">✓</span>}</button>}</article>
           })}
         </section>
 
