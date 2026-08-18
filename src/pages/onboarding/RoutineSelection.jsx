@@ -91,7 +91,10 @@ export default function RoutineSelection({ analysis, onComplete, onBack, onCance
     setIsLoadingRoutines(true)
     try {
       const currentRoutines = await getRoutines()
-      const currentList = (currentRoutines?.data?.content || []).filter((item) => item.status === 'ACTIVE')
+      const hiddenIds = new Set(JSON.parse(localStorage.getItem('renewHiddenRoutineIds') || '[]').map(String))
+      const currentList = (currentRoutines?.data?.content || [])
+        .filter((item) => item.status === 'ACTIVE')
+        .filter((item) => !hiddenIds.has(String(item.id)))
       const detailResults = await Promise.allSettled(currentList.map((item) => getRoutine(item.id)))
       const list = detailResults
         .map((result, index) => {
