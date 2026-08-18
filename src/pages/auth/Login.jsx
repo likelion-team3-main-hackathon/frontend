@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { loginWithGoogle } from '../../api/auth'
 import titleLogo from '../../assets/icons/logo/logo_title.png'
+import googleLogo from '../../assets/icons/Google.svg'
 import './Login.css'
 
 const GOOGLE_SCRIPT_ID = 'google-identity-services'
@@ -161,11 +162,10 @@ export default function Login({ onLoginSuccess }) {
       </div>
 
       <div className="login-actions" aria-busy={isLoading}>
-        <div
-          ref={googleButtonRef}
-          className={isLoading ? 'google-login-container is-loading' : 'google-login-container'}
-          aria-label="Google 계정으로 로그인"
-        />
+        <div className={isLoading ? 'google-login-button-shell is-loading' : 'google-login-button-shell'} aria-label="Google 계정으로 로그인">
+          <span className="google-login-visual"><img src={googleLogo} alt="Google" /><strong>로그인</strong></span>
+          <div ref={googleButtonRef} className="google-login-container" />
+        </div>
         {demoLoginEnabled && (
           <div className="demo-login-list">
             <small>분석실 데모 계정</small>
