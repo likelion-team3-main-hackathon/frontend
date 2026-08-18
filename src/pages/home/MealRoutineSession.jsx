@@ -38,7 +38,7 @@ function mealTypeCode(type) {
   return 'SNACK'
 }
 
-export default function MealRoutineSession({ item, onDecision, onClose, onMealUpdated, viewOnly = false, dayView = false }) {
+export default function MealRoutineSession({ item, onDecision, onClose, onComplete, onMealUpdated, viewOnly = false, dayView = false }) {
   const [foods, setFoods] = useState(() => initialFoods(item))
   const [isAdding, setIsAdding] = useState(false)
   const [draft, setDraft] = useState(EMPTY_FOOD)
@@ -84,7 +84,8 @@ export default function MealRoutineSession({ item, onDecision, onClose, onMealUp
       await onDecision?.(item, 'completed', { foods, mealType: mealTypeCode(item.type),
         photoFile: mealAnalysisId ? null : photo?.file, mealAnalysisId })
       onMealUpdated?.({ ...item, foods, details: { ...item.details, foods, ...totals }, detail: `${totals.calories} kcal` })
-      onClose?.()
+      if (onComplete) onComplete()
+      else onClose?.()
     } catch (requestError) { setError(requestError.message || '식단 기록을 저장하지 못했어요.'); setIsSaving(false) }
   }
 

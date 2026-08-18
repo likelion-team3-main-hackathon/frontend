@@ -187,13 +187,6 @@
   font-size: 18px;
 }
 
-.active-routine-card .routine-credit-reward {
-  color: #5b9844;
-  font-size: 9px;
-  font-weight: 800;
-  white-space: nowrap;
-}
-
 .routine-progress {
   height: 4px;
   overflow: hidden;
@@ -254,18 +247,43 @@
   padding-left: 23px;
 }
 
-.credit-reward {
-  display: inline-flex;
+.credit-earned-toast {
+  position: absolute;
+  z-index: 30;
+  right: 16px;
+  bottom: 76px;
+  left: 16px;
+  display: grid;
+  min-height: 54px;
+  padding: 0 16px;
+  grid-template-columns: 24px 1fr;
+  gap: 10px;
   align-items: center;
-  flex-shrink: 0;
-  color: #5b9844;
-  font-size: 10px;
-  font-style: normal;
-  font-weight: 800;
+  border-radius: 17px;
+  background: #3f5137;
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(35, 48, 30, .22);
+  animation: credit-toast-in .2s ease-out;
 }
 
-.today-meta .credit-reward { margin-left: auto; margin-right: 8px; }
-.compact-routine .credit-reward { margin-left: auto; margin-right: 5px; }
+.credit-earned-toast i {
+  display: grid;
+  width: 23px;
+  height: 23px;
+  place-items: center;
+  border-radius: 50%;
+  background: #9aca70;
+  color: #26401e;
+  font-size: 11px;
+  font-style: normal;
+}
+
+.credit-earned-toast strong { font-size: 12px; }
+
+@keyframes credit-toast-in {
+  from { transform: translateY(9px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
 
 .empty-day-card {
   padding: 25px 14px;

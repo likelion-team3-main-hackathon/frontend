@@ -72,6 +72,7 @@ export default function Router() {
   const [goalInitialStep, setGoalInitialStep] = useState(1)
   const [isRoutineReset, setIsRoutineReset] = useState(false)
   const [homeInitialDate, setHomeInitialDate] = useState(null)
+  const [creditToast, setCreditToast] = useState(null)
 
   function openCheckout(order, backPage) {
     setCheckoutOrder(order)
@@ -85,12 +86,13 @@ export default function Router() {
   }
 
   async function saveRoutineStatus(item, status, mealData, exerciseData) {
+    let recordResponse = null
     if (mealData && status === 'completed') {
-      await recordMealRoutine(item, mealData.foods, mealData.mealType, mealData.photoFile, mealData.mealAnalysisId)
+      recordResponse = await recordMealRoutine(item, mealData.foods, mealData.mealType, mealData.photoFile, mealData.mealAnalysisId)
       const calories = mealData.foods.reduce((total, food) => total + Number(food.calories || 0), 0)
       setRoutineCalories((current) => ({ ...current, [item.id]: calories }))
     } else if (item.routineItemId != null || item.exercises?.length) {
-      await recordRoutineItems(item, status, item.activityType || 'EXERCISE', exerciseData || {})
+      recordResponse = await recordRoutineItems(item, status, item.activityType || 'EXERCISE', exerciseData || {})
     }
     if (exerciseData && status === 'completed') {
       setExerciseResults((current) => ({ ...current, [item.id]: exerciseData }))
@@ -101,7 +103,27 @@ export default function Router() {
       linkedIds.forEach((id) => { next[id] = status })
       return next
     })
+    if (status === 'completed') {
+      const responseData = recordResponse?.data || recordResponse || {}
+      const awardedCredit = Number(
+        responseData.creditAwarded
+        ?? responseData.creditsEarned
+        ?? responseData.earnedCredit
+        ?? (mealData ? 10 : 20),
+      )
+      setProfile((current) => current ? {
+        ...current,
+        creditBalance: Number(current.creditBalance || 0) + awardedCredit,
+      } : current)
+      setCreditToast({ amount: awardedCredit, id: Date.now() })
+    }
   }
+
+  useEffect(() => {
+    if (!creditToast) return undefined
+    const timer = window.setTimeout(() => setCreditToast(null), 8000)
+    return () => window.clearTimeout(timer)
+  }, [creditToast])
 
   useEffect(() => {
     if (page !== 'loading') return
@@ -219,6 +241,7 @@ export default function Router() {
           <Home
             initialSelectedDate={homeInitialDate}
             onDateOverrideConsumed={() => setHomeInitialDate(null)}
+            creditToast={creditToast}
             onCreateRoutine={() => {
               setIsRoutineReset(false)
               setHealthDataBackPage('goal')

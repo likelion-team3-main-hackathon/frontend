@@ -53,6 +53,7 @@ export default function MealDaySession({ item, onDecision, onClose, viewOnly = f
       dayView
       onDecision={onDecision}
       onClose={() => setSelectedMealId(null)}
+      onComplete={viewOnly ? () => setSelectedMealId(null) : onClose}
       onMealUpdated={(updatedMeal) => setMeals((current) => current.map((meal) => String(meal.id) === String(updatedMeal.id) ? updatedMeal : meal))}
     />
   }
