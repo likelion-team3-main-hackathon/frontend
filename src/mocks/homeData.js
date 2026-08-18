@@ -28,7 +28,7 @@ export const homeMockData = {
     { id: 104, activityType: 'MEAL', type: '끼니', time: '시간 미정', title: '메뉴', detail: '칼로리' },
   ],
   condition: {
-    water: { current: 5, target: 8 },
+    water: { current: 0, target: 8 },
     sleep: { total: '7시간 20분', asleepAt: '23:40', wakeAt: '07:00', deepSleep: '1시간 40분' },
     coaching: '수면이 3일째 7시간 아래예요. 저녁 운동을 30분 앞당겨 볼까요?',
     recommendation: '연구원 한마디 · 단백질 −12g',

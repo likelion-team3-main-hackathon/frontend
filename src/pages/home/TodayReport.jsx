@@ -107,7 +107,7 @@ export default function TodayReport({ items = [], statuses = {}, calories = {}, 
   const waterRecord = records.find((record) => detailsOf(record).category === 'WATER')
   const water = waterRecord
     ? Number(detailsOf(waterRecord).glasses ?? 0)
-    : (isToday ? homeMockData.condition.water.current : 0)
+    : 0
   const exercises = items.filter((item) => ['EXERCISE', 'REHABILITATION'].includes(item.activityType) && statusForItem(item, statuses) === 'completed')
   const recordedExerciseResults = records
     .filter((record) => record.activityType === 'EXERCISE' || record.type === 'EXERCISE')

@@ -202,7 +202,7 @@ export default function Home({
   const [activeRoutines, setActiveRoutines] = useState([])
   const [routineDetails, setRoutineDetails] = useState([])
   const [coaching, setCoaching] = useState(homeMockData.condition.coaching)
-  const [water, setWater] = useState(homeMockData.condition.water.current)
+  const [water, setWater] = useState(0)
   const [isApiConnected, setIsApiConnected] = useState(false)
   const [routineSlide, setRoutineSlide] = useState(0)
   const [activeDateKeys, setActiveDateKeys] = useState(new Set())

@@ -77,10 +77,12 @@ function recordedAtFor(item) {
 }
 
 export function recordWater(glasses, date) {
-  return createRoutineRecord({
-    type: 'OTHER',
+  return apiRequest('/routine-records/water', {
+    method: 'PUT',
+    body: {
+      glasses,
     recordedAt: date ? `${date}T12:00:00+09:00` : new Date().toISOString(),
-    details: { category: 'WATER', glasses, milliliters: glasses * 250 },
+    },
   })
 }
 
