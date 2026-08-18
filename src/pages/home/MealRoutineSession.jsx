@@ -4,6 +4,7 @@ import cameraIcon from '../../assets/icons/camera.png'
 import MealCamera from './MealCamera'
 import MealFoodDetail from './MealFoodDetail'
 import './MealRoutineSession.css'
+import { randomId } from '../../utils/randomId'
 
 const EMPTY_FOOD = { name: '', calories: '', carbs: '', protein: '', fat: '', servingGrams: 100 }
 
@@ -58,7 +59,7 @@ export default function MealRoutineSession({ item, onDecision, onClose, onMealUp
   function addFood(event) {
     event.preventDefault()
     if (!draft.name.trim()) return
-    setFoods((current) => [...current, { ...draft, id: crypto.randomUUID(), name: draft.name.trim() }])
+    setFoods((current) => [...current, { ...draft, id: randomId(), name: draft.name.trim() }])
     setDraft(EMPTY_FOOD); setIsAdding(false)
   }
 

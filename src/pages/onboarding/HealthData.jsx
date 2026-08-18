@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { uploadHealthDocument } from '../../api/health'
 import { saveHealthDocumentPreview } from '../../utils/healthDocumentPreview'
+import { randomId } from '../../utils/randomId'
 import './HealthData.css'
 
 const UPLOAD_CATEGORIES = [
@@ -10,7 +11,7 @@ const UPLOAD_CATEGORIES = [
 
 function fileEntry(file) {
   return {
-    id: `${file.name}-${file.lastModified}-${crypto.randomUUID()}`,
+    id: `${file.name}-${file.lastModified}-${randomId()}`,
     file,
     previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : '',
   }
@@ -70,7 +71,7 @@ export default function HealthData({ onNext, onBack, allowSkip = false }) {
       const responses = await Promise.all(selectedDocuments.map((document) => uploadHealthDocument(document.file, document.documentType)))
       const documentIds = responses.map((response) => response?.data?.documentId).filter(Boolean)
       await Promise.all(responses.map((response, index) => saveHealthDocumentPreview(response?.data?.documentId, selectedDocuments[index]?.file).catch(() => {})))
-      onNext?.({ documents: selectedDocuments, documentIds, analysisRequestKey: crypto.randomUUID() })
+      onNext?.({ documents: selectedDocuments, documentIds, analysisRequestKey: randomId() })
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : '건강 문서를 업로드하지 못했습니다.')
     } finally {

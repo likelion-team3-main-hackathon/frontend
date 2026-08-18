@@ -1,4 +1,5 @@
 import { apiRequest } from './client'
+import { randomId } from '../utils/randomId'
 
 export function uploadHealthDocument(file, documentType, measuredAt) {
   const formData = new FormData()
@@ -10,7 +11,7 @@ export function uploadHealthDocument(file, documentType, measuredAt) {
   return apiRequest('/health-documents', { method: 'POST', body: formData })
 }
 
-export function createHealthAnalysis(documentIds, idempotencyKey = crypto.randomUUID()) {
+export function createHealthAnalysis(documentIds, idempotencyKey = randomId()) {
   return apiRequest('/health-analyses', {
     method: 'POST',
     headers: { 'Idempotency-Key': idempotencyKey },

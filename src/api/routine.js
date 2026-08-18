@@ -1,9 +1,10 @@
 import { apiRequest } from './client'
+import { randomId } from '../utils/randomId'
 
 export function requestRoutineGeneration(request) {
   return apiRequest('/routines/generations', {
     method: 'POST',
-    headers: { 'Idempotency-Key': crypto.randomUUID() },
+    headers: { 'Idempotency-Key': randomId() },
     body: request,
   })
 }

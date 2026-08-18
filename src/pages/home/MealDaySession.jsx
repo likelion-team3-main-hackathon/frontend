@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import MealRoutineSession from './MealRoutineSession'
 import './MealDaySession.css'
+import { randomId } from '../../utils/randomId'
 
 const MEAL_ORDER = ['아침', '점심', '저녁', '간식']
 
@@ -59,7 +60,7 @@ export default function MealDaySession({ item, onDecision, onClose, viewOnly = f
   function addSnack() {
     const snack = {
       ...item,
-      id: `snack-${item.scheduledDate}-${crypto.randomUUID()}`,
+      id: `snack-${item.scheduledDate}-${randomId()}`,
       routineItemId: null,
       routineItemIds: [],
       type: '간식',

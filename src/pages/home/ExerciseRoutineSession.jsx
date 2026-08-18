@@ -4,6 +4,7 @@ import exerciseIcon from '../../assets/icons/routine/exercise.png'
 import ExerciseDetail from './ExerciseDetail'
 import ExerciseWorkout from './ExerciseWorkout'
 import './ExerciseRoutineSession.css'
+import { randomId } from '../../utils/randomId'
 
 const MOCK_EXERCISES = [
   { id: 'mock-ex-1', name: '덤벨 컬', targetValue: 12, targetUnit: 'REPETITIONS', sets: 3, weightKg: 20, restSeconds: 45 },
@@ -72,7 +73,7 @@ export default function ExerciseRoutineSession({ item, onDecision, onClose, view
     if (!newExerciseName.trim()) return
     const fallbackSectionId = exercises.at(-1)?.sectionId || exercises[0]?.sectionId
     setExercises((current) => [...current, {
-      id: `manual-${crypto.randomUUID()}`,
+      id: `manual-${randomId()}`,
       exerciseId: null,
       isManual: true,
       name: newExerciseName.trim(),

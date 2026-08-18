@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { createHealthAnalysis, getLatestHealthAnalysis, waitForHealthAnalysis } from '../../api/health'
 import RoutineLoading from './RoutineLoading'
 import './HealthAnalysis.css'
+import { randomId } from '../../utils/randomId'
 
 const analysisCreationRequests = new Map()
 const GOAL_LABELS = {
@@ -112,7 +113,7 @@ export default function HealthAnalysis({ healthDocuments, onNext, onBack, onRetu
         }
         const response = await createHealthAnalysisOnce(
           documentIds,
-          healthDocuments.analysisRequestKey || crypto.randomUUID(),
+          healthDocuments.analysisRequestKey || randomId(),
         )
         const analysisId = response?.data?.analysisId
 
