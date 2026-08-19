@@ -90,7 +90,7 @@ export default function AnalysisLab({ onNavigate }) {
 
       <h2 className="lab-title">검사실 4</h2>
       <div className="lab-grid">{labMetrics.map((metric) => { const detailPage = metric.id === 'meal' ? 'meal-analysis' : metric.id === 'exercise' ? 'exercise-analysis' : metric.id === 'body' ? 'body-analysis' : null; return <article className={detailPage ? 'clickable' : ''} role={detailPage ? 'button' : undefined} tabIndex={detailPage ? 0 : undefined} onClick={() => detailPage && onNavigate?.(detailPage)} onKeyDown={(event) => { if (detailPage && event.key === 'Enter') onNavigate?.(detailPage) }} key={metric.id}><header><strong>{metric.label}</strong><b>{metric.score != null ? <>{metric.score}<small>/100</small></> : metric.badge || (metric.status === 'COMING_SOON' ? '예정' : '–')}</b></header><p>{metric.note}</p><div><i style={{ width: `${metric.score || 0}%` }} /></div></article> })}</div>
-      <button type="button" className="analysis-link-button">의료기록 조회 <span>›</span></button>
+      <button type="button" className="analysis-link-button" onClick={() => onNavigate?.('medical-records')}>의료기록 조회 <span>›</span></button>
       <button type="button" className="analysis-link-button">종합 리포트 PDF · 의료진 공유 <span>⇧</span></button>
     </div>
     <BottomNav active="analysis" onNavigate={onNavigate} />

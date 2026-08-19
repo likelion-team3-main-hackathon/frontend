@@ -42,7 +42,9 @@
   .placeholder-page,
   .today-report-page,
   .notification-page,
-  .ai-routine-chat-page
+  .ai-routine-chat-page,
+  .medical-records-page,
+  .medical-record-detail-page
 ) {
   height: calc(100% + 48px);
   overflow: hidden;

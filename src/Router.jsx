@@ -29,6 +29,7 @@ import AnalysisLab from './pages/analysis/AnalysisLab'
 import MealAnalysisLab from './pages/analysis/MealAnalysisLab'
 import ExerciseAnalysisLab from './pages/analysis/ExerciseAnalysisLab'
 import BodyCompositionLab from './pages/analysis/BodyCompositionLab'
+import MedicalRecords from './pages/analysis/MedicalRecords'
 import HealthRecordsPage from './pages/my/HealthRecordsPage'
 import NotificationPage from './pages/notifications/NotificationPage'
 import { recordMealRoutine, recordRoutineItems } from './api/record'
@@ -354,6 +355,8 @@ export default function Router() {
           setHealthDataBackPage('body-analysis')
           setPage('health-data')
         }} />}
+
+        {page === 'medical-records' && <MedicalRecords onBack={() => setPage('analysis')} />}
 
         {page === 'market' && <MarketPage
           onNavigate={setPage}
