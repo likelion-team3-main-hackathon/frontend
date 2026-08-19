@@ -218,7 +218,7 @@ export default function MedicalRecords({ onBack }) {
           ? <ul className="medical-key-findings-list">{keyFindings.map((item, index) => <li key={`${item}-${index}`}>{item}</li>)}</ul>
           : <p>추출된 주요 항목이 없습니다.</p>}</article>
 
-        <article><small>주요 확인 사항에 반영된 관리 사항</small>{managementItems.length
+        <article><small>해당 분석 중 루틴에 반영된 사항</small>{managementItems.length
           ? <ul className="medical-management-list">{managementItems.map((item, index) => <li key={`${item}-${index}`}>{item}</li>)}</ul>
           : <p>이 기록에서 별도로 도출된 관리 사항이 없습니다.</p>}</article>
 

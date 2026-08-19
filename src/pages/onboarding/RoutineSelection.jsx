@@ -6,7 +6,18 @@ import {
   waitForRoutineGeneration,
 } from '../../api/routine'
 import RoutineLoading from './RoutineLoading'
+import mealBalancedImage from '../../assets/images/routines/meal-balanced.png'
+import mealProteinImage from '../../assets/images/routines/meal-protein.png'
+import exerciseRehabImage from '../../assets/images/routines/exercise-rehab.png'
+import exerciseFlexibilityImage from '../../assets/images/routines/exercise-flexibility.png'
 import './RoutineSelection.css'
+
+const ROUTINE_IMAGES = {
+  MEAL_PRIMARY: mealBalancedImage,
+  MEAL_ALTERNATIVE: mealProteinImage,
+  EXERCISE_PRIMARY: exerciseRehabImage,
+  EXERCISE_ALTERNATIVE: exerciseFlexibilityImage,
+}
 
 const FALLBACK_RECOMMENDATIONS = [
   { id: 'MEAL_PRIMARY', category: 'MEAL', title: '균형 식단 3주', description: '영양 균형을 맞춘 하루 세 끼 식단', durationWeeks: 3, mealCountPerDay: 3, exerciseDaysPerWeek: 0, preferredExerciseTypes: [], tags: ['식단', '균형'], rationale: '온보딩 식습관을 반영한 기본 추천입니다.' },
@@ -246,7 +257,9 @@ export default function RoutineSelection({ analysis, onComplete, onBack, onCance
                     disabled={isSubmitting}
                     onClick={() => toggleRoutine(routine)}
                   >
-                    <span className="routine-card-image">이미지</span>
+                    <span className="routine-card-image">
+                      <img src={ROUTINE_IMAGES[routine.id] || (routine.category === 'MEAL' ? mealBalancedImage : exerciseRehabImage)} alt="" />
+                    </span>
                     <span className="routine-selected-mark" aria-hidden="true">{isSelected ? '✓' : ''}</span>
                     <strong>{routine.title}</strong>
                     <span className="routine-tags">
