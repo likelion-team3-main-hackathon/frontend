@@ -96,7 +96,7 @@ export default function MyPage({ initialProfile, onNavigate, onResetRoutine, onL
 
         <div className="my-menu-card">{MENU_ITEMS.map((item) => <button type="button" key={item.label} onClick={() => item.id && onNavigate?.(item.id)}><i>{item.icon}</i><strong>{item.label}</strong><span>{item.id === 'health-records' ? `${healthDocumentCount}건` : item.label === '크레딧 내역' ? `${creditBalance.toLocaleString()} C` : item.value}</span><b>›</b></button>)}</div>
 
-        <button type="button" className="my-ai-history" onClick={onOpenAi}><i>◎</i><span><strong>AI 챗봇</strong><small>리뉴 연구원과 대화하기</small></span><b>›</b></button>
+        <button type="button" className="my-ai-history" onClick={onOpenAi}><i>◎</i><span><strong>AI 챗봇</strong><small>MCC 연구원과 대화하기</small></span><b>›</b></button>
 
         <button type="button" className="routine-reset-card" onClick={onResetRoutine}><i>↻</i><span><strong>루틴 재설정</strong><small>목표와 건강 정보를 다시 설정해요</small></span><b>›</b></button>
         <button type="button" className="my-logout-card" onClick={handleLogout}><i>↪</i><span><strong>로그아웃</strong><small>현재 계정에서 로그아웃해요</small></span><b>›</b></button>

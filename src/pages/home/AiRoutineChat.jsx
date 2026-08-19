@@ -151,7 +151,7 @@ export default function AiRoutineChat({ onBack, onActionExecuted }) {
       <header>
         <button type="button" onClick={onBack}>‹</button>
         <img src={catLogo} alt="" />
-        <div><h1>리뉴 연구원</h1><small>내 기록 · 루틴 열람 중</small></div>
+        <div><h1>MCC 연구원</h1><small>내 기록 · 루틴 열람 중</small></div>
         <em>AI</em>
       </header>
 
