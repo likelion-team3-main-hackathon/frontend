@@ -145,15 +145,7 @@ export default function TodayReport({ items = [], statuses = {}, calories = {}, 
         </div>
 
         <article className="report-coaching"><span>!</span><p><strong>연구원 한마디</strong>{nutritionReport?.comment || `오늘 단백질이 ${Math.max(0, 120 - nutrients.protein)}g 부족했어요.`}</p></article>
-        <button type="button" className="prepare-tomorrow-button" onClick={() => onNavigate?.('ai-chat')}>내일 루틴 대비하기</button>
-
-        <div className="report-activity-heading"><h2>오늘 할 일 <b>{completed} / {items.length}</b></h2><span>3개 루틴 종합</span></div>
-        <div className="report-activity-list">
-          {items.map((item) => {
-            const status = statusForItem(item, statuses)
-            return <article className={status || ''} key={item.id}><i /><div><strong>{item.type} · {item.title}</strong><small>{item.activityType === 'MEAL' && status === 'completed' ? `섭취 ${(calories[item.id] || 0).toLocaleString()} kcal` : item.detail}</small></div><span>{status === 'completed' ? '✓' : status === 'cancelled' ? '−' : ''}</span></article>
-          })}
-        </div>
+        <button type="button" className="prepare-tomorrow-button" onClick={() => onNavigate?.('home-tomorrow')}>내일 루틴 확인하기</button>
       </div>
       <BottomNav active="home" onNavigate={onNavigate} />
     </section>
