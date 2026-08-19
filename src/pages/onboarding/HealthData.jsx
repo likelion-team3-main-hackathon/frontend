@@ -20,10 +20,11 @@ function fileEntry(file) {
 export default function HealthData({ onNext, onBack, allowSkip = false }) {
   const cameraInputRef = useRef(null)
   const fileInputRef = useRef(null)
+  const eyeBodyInputRef = useRef(null)
   const [categories, setCategories] = useState(() => UPLOAD_CATEGORIES.map((category) => ({ ...category, files: [] })))
   const [activeCategoryId, setActiveCategoryId] = useState(null)
   const [pickerCategoryId, setPickerCategoryId] = useState(null)
-  const [eyeBodyReady, setEyeBodyReady] = useState(false)
+  const [eyeBodyFile, setEyeBodyFile] = useState(null)
   const [appleLinked, setAppleLinked] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -41,6 +42,20 @@ export default function HealthData({ onNext, onBack, allowSkip = false }) {
     const categoryId = pickerCategoryId
     setPickerCategoryId(null)
     if (categoryId) window.setTimeout(() => openPicker(categoryId, mode), 0)
+  }
+
+  function openEyeBodyPicker(mode) {
+    const input = eyeBodyInputRef.current
+    if (!input) return
+    input.accept = 'image/jpeg,image/png'
+    input.capture = mode === 'camera' ? 'environment' : ''
+    input.click()
+  }
+
+  function addEyeBodyFile(event) {
+    const file = event.target.files?.[0]
+    if (file) setEyeBodyFile(file)
+    event.target.value = ''
   }
 
   function addFiles(event) {
@@ -67,18 +82,21 @@ export default function HealthData({ onNext, onBack, allowSkip = false }) {
       ...category,
       ...entry,
     })))
-    if (selectedDocuments.length === 0) {
-      setError('분석에 사용할 인바디 또는 진료 자료를 하나 이상 추가해 주세요.')
+    if (selectedDocuments.length === 0 && !eyeBodyFile) {
+      setError('분석에 사용할 눈바디, 인바디 또는 진료 자료를 하나 이상 추가해 주세요.')
       return
     }
 
     setIsSubmitting(true)
     setError('')
     try {
-      const responses = await Promise.all(selectedDocuments.map((document) => uploadHealthDocument(document.file, document.documentType)))
+      const uploads = eyeBodyFile
+        ? [...selectedDocuments, { file: eyeBodyFile, documentType: 'BODY_PHOTO' }]
+        : selectedDocuments
+      const responses = await Promise.all(uploads.map((document) => uploadHealthDocument(document.file, document.documentType)))
       const documentIds = responses.map((response) => response?.data?.documentId).filter(Boolean)
-      await Promise.all(responses.map((response, index) => saveHealthDocumentPreview(response?.data?.documentId, selectedDocuments[index]?.file).catch(() => {})))
-      onNext?.({ documents: selectedDocuments, documentIds, analysisRequestKey: randomId() })
+      await Promise.all(responses.map((response, index) => saveHealthDocumentPreview(response?.data?.documentId, uploads[index]?.file).catch(() => {})))
+      onNext?.({ documents: uploads, documentIds, analysisRequestKey: randomId() })
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : '건강 문서를 업로드하지 못했습니다.')
     } finally {
@@ -97,8 +115,8 @@ export default function HealthData({ onNext, onBack, allowSkip = false }) {
         <h1>가진 정보가 있으면<br />한 번에 불러올게요</h1>
         <div className="health-document-list">
           <article className="health-document-card">
-            <div><h2>눈바디</h2><p>체형분석</p></div>
-            <button type="button" className={`document-action ${eyeBodyReady ? 'completed' : ''}`} onClick={() => setEyeBodyReady((value) => !value)}>{eyeBodyReady ? '완료' : '촬영'}</button>
+            <div><h2>눈바디</h2><p>전신 사진으로 체형 참고 분석</p></div>
+            <button type="button" className={`document-action ${eyeBodyFile ? 'completed' : ''}`} onClick={() => setPickerCategoryId('eye-body')}>{eyeBodyFile ? '완료' : '촬영'}</button>
           </article>
           <article className="health-document-card">
             <div><h2>애플 건강</h2><p>걸음·체중·수면 연동</p></div>
@@ -134,12 +152,13 @@ export default function HealthData({ onNext, onBack, allowSkip = false }) {
 
       <input ref={cameraInputRef} className="hidden-file-input" type="file" accept="image/jpeg,image/png" capture="environment" multiple onChange={addFiles} />
       <input ref={fileInputRef} className="hidden-file-input" type="file" multiple onChange={addFiles} />
+      <input ref={eyeBodyInputRef} className="hidden-file-input" type="file" accept="image/jpeg,image/png" onChange={addEyeBodyFile} />
 
       {pickerCategoryId && <div className="health-picker-backdrop" role="presentation" onClick={() => setPickerCategoryId(null)}>
-        <div className="health-picker-sheet" role="dialog" aria-modal="true" aria-label="인바디 사진 추가 방법" onClick={(event) => event.stopPropagation()}>
-          <strong>인바디 결과지를 추가해 주세요</strong>
-          <button type="button" onClick={() => choosePickerMode('camera')}>사진 촬영</button>
-          <button type="button" onClick={() => choosePickerMode('file')}>앨범에서 선택</button>
+        <div className="health-picker-sheet" role="dialog" aria-modal="true" aria-label={`${pickerCategoryId === 'eye-body' ? '눈바디' : '인바디'} 사진 추가 방법`} onClick={(event) => event.stopPropagation()}>
+          <strong>{pickerCategoryId === 'eye-body' ? '전신 눈바디 사진을 추가해 주세요' : '인바디 결과지를 추가해 주세요'}</strong>
+          <button type="button" onClick={() => pickerCategoryId === 'eye-body' ? (setPickerCategoryId(null), openEyeBodyPicker('camera')) : choosePickerMode('camera')}>사진 촬영</button>
+          <button type="button" onClick={() => pickerCategoryId === 'eye-body' ? (setPickerCategoryId(null), openEyeBodyPicker('file')) : choosePickerMode('file')}>앨범에서 선택</button>
           <button type="button" className="health-picker-cancel" onClick={() => setPickerCategoryId(null)}>취소</button>
         </div>
       </div>}
