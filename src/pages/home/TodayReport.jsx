@@ -4,6 +4,7 @@ import BottomNav from '../../components/layout/BottomNav'
 import smileIcon from '../../assets/icons/smile_big.png'
 import sadIcon from '../../assets/icons/sad.png'
 import bellIcon from '../../assets/icons/bell.png'
+import titleLogo from '../../assets/icons/logo/logo_title.png'
 import { homeMockData } from '../../mocks/homeData'
 import './TodayReport.css'
 
@@ -126,7 +127,7 @@ export default function TodayReport({ items = [], statuses = {}, calories = {}, 
   return (
     <section className="today-report-page">
       <div className="today-report-scroll">
-        <header className="report-topbar"><button type="button" onClick={onBack}>리뉴</button><img src={bellIcon} alt="" /></header>
+        <header className="report-topbar"><button type="button" onClick={onBack} aria-label="홈으로 돌아가기"><img className="report-title-logo" src={titleLogo} alt="리뉴" /></button><img src={bellIcon} alt="" /></header>
         <div className="report-title"><h1>{isToday ? '오늘의 리포트' : `${selectedDate.getMonth() + 1}월 ${selectedDate.getDate()}일 리포트`}</h1><span>{selectedDate.getMonth() + 1}월 {selectedDate.getDate()}일 {weekday}요일</span></div>
 
         <article className="report-hero">
