@@ -82,11 +82,6 @@ export default function HealthData({ onNext, onBack, allowSkip = false }) {
       ...category,
       ...entry,
     })))
-    if (selectedDocuments.length === 0 && !eyeBodyFile) {
-      setError('분석에 사용할 눈바디, 인바디 또는 진료 자료를 하나 이상 추가해 주세요.')
-      return
-    }
-
     setIsSubmitting(true)
     setError('')
     try {

@@ -94,11 +94,6 @@ export default function HealthAnalysis({ healthDocuments, onNext, onBack, onRetu
     const documentIds = healthDocuments?.documentIds || []
     const controller = new AbortController()
 
-    if (documentIds.length === 0 && !healthDocuments?.useExisting) {
-      setError('분석할 건강 문서가 없습니다.')
-      return () => controller.abort()
-    }
-
     async function analyze() {
       try {
         if (healthDocuments?.useExisting) {
