@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import MealRoutineSession from './MealRoutineSession'
 import './MealDaySession.css'
 import { randomId } from '../../utils/randomId'
+import { formatOneDecimal } from '../../utils/number'
 
 const MEAL_ORDER = ['아침', '점심', '저녁', '간식']
 
@@ -88,15 +89,15 @@ export default function MealDaySession({ item, onDecision, onClose, viewOnly = f
           return (
             <button type="button" className="meal-day-card" key={meal.id} onClick={() => setSelectedMealId(meal.id)}>
               <div><strong>{meal.type || '식사'}</strong><span>›</span></div>
-              <div><b>{totals.calories.toLocaleString()} kcal</b><small>탄 {totals.carbs}　단 {totals.protein}　지 {totals.fat}</small></div>
+              <div><b>{formatOneDecimal(totals.calories)} kcal</b><small>탄 {formatOneDecimal(totals.carbs)}　단 {formatOneDecimal(totals.protein)}　지 {formatOneDecimal(totals.fat)}</small></div>
             </button>
           )
         })}
       </div>
 
       <div className="meal-day-total">
-        <strong>합계 {dayTotals.calories.toLocaleString()} kcal</strong>
-        <small>탄 {dayTotals.carbs}　단 {dayTotals.protein}　지 {dayTotals.fat}</small>
+        <strong>합계 {formatOneDecimal(dayTotals.calories)} kcal</strong>
+        <small>탄 {formatOneDecimal(dayTotals.carbs)}　단 {formatOneDecimal(dayTotals.protein)}　지 {formatOneDecimal(dayTotals.fat)}</small>
       </div>
 
       {!viewOnly && <button type="button" className="meal-day-add" onClick={addSnack} aria-label="간식 추가">＋</button>}

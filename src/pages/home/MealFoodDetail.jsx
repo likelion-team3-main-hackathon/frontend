@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { createMealCart, getMealProductRecommendations } from '../../api/market'
 import bellIcon from '../../assets/icons/bell.png'
+import { formatOneDecimal } from '../../utils/number'
 
 const INGREDIENT_FALLBACKS = {
   '닭가슴살 샐러드': ['닭가슴살', '양상추', '방울토마토'],
@@ -68,7 +69,7 @@ export default function MealFoodDetail({ food, photoUrl, routineId, onBack, onSa
 
       <article className="food-detail-summary">
         <div className="food-detail-photo" style={photoUrl ? { backgroundImage: `url(${photoUrl})` } : undefined}>{!photoUrl && '🥗'}</div>
-        <div><strong>{food.name}</strong><span className="food-recognition-line"><b>{nutrition.calories.toLocaleString()} kcal</b>{food.autoRecognized && <em>✓ 자동 인식</em>}</span></div>
+        <div><strong>{food.name}</strong><span className="food-recognition-line"><b>{formatOneDecimal(nutrition.calories)} kcal</b>{food.autoRecognized && <em>✓ 자동 인식</em>}</span></div>
       </article>
 
       <article className="food-detail-time"><span><img src={bellIcon} alt="" />{recordedTime}</span><small>자동</small></article>
@@ -82,9 +83,9 @@ export default function MealFoodDetail({ food, photoUrl, routineId, onBack, onSa
       <button type="button" className="food-detail-row"><span>요리법 보기</span><b>›</b></button>
 
       <article className="food-nutrition-card">
-        <strong>{nutrition.calories.toLocaleString()} <small>kcal</small></strong>
+        <strong>{formatOneDecimal(nutrition.calories)} <small>kcal</small></strong>
         <div><i style={{ width: `${Math.min(100, nutrition.carbs)}%` }} /><i style={{ width: `${Math.min(100, nutrition.protein)}%` }} /><i style={{ width: `${Math.min(100, nutrition.fat)}%` }} /></div>
-        <small>탄 {nutrition.carbs}　단 {nutrition.protein}　지 {nutrition.fat}</small>
+        <small>탄 {formatOneDecimal(nutrition.carbs)}　단 {formatOneDecimal(nutrition.protein)}　지 {formatOneDecimal(nutrition.fat)}</small>
       </article>
 
       <button type="button" className="meal-confirm-button" onClick={readOnly ? onBack : () => onSave({ ...food, amount, serving, ...nutrition })}>{readOnly ? '돌아가기' : '확인'}</button>
